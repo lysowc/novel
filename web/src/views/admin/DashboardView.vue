@@ -48,21 +48,21 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-8">
     <!-- 统计卡片 -->
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 xl:grid-cols-6">
       <div
         v-for="s in stats"
         :key="s.label"
-        class="fade-up rounded-2xl border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+        class="fade-up rounded-2xl border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
       >
         <span
-          class="flex size-9 items-center justify-center rounded-xl bg-foreground text-background shadow-md"
+          class="flex size-10 items-center justify-center rounded-xl bg-foreground text-background shadow-md"
         >
-          <component :is="s.icon" class="size-4.5" />
+          <component :is="s.icon" class="size-5" />
         </span>
-        <p class="mt-3 truncate text-lg font-bold leading-none">{{ s.value }}</p>
-        <p class="mt-1.5 text-xs text-muted-foreground">{{ s.label }}</p>
+        <p class="mt-4 truncate text-xl font-bold leading-none">{{ s.value }}</p>
+        <p class="mt-2 text-xs text-muted-foreground">{{ s.label }}</p>
       </div>
     </div>
 

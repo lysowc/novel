@@ -112,26 +112,26 @@ onMounted(async () => {
             </p>
 
             <!-- 统计 -->
-            <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div class="rounded-xl border bg-card p-3 text-center">
+            <div class="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div class="rounded-xl bg-muted/50 p-4 text-center">
                 <FileText class="mx-auto size-4 text-primary" />
-                <p class="mt-1.5 text-base font-semibold">{{ formatNumber(novel.word_count) }}</p>
-                <p class="text-[11px] text-muted-foreground">总字数</p>
+                <p class="mt-2 text-lg font-semibold leading-none">{{ formatNumber(novel.word_count) }}</p>
+                <p class="mt-1.5 text-xs text-muted-foreground">总字数</p>
               </div>
-              <div class="rounded-xl border bg-card p-3 text-center">
+              <div class="rounded-xl bg-muted/50 p-4 text-center">
                 <Layers class="mx-auto size-4 text-primary" />
-                <p class="mt-1.5 text-base font-semibold">{{ novel.chapter_count }}</p>
-                <p class="text-[11px] text-muted-foreground">章节数</p>
+                <p class="mt-2 text-lg font-semibold leading-none">{{ novel.chapter_count }}</p>
+                <p class="mt-1.5 text-xs text-muted-foreground">章节数</p>
               </div>
-              <div class="rounded-xl border bg-card p-3 text-center">
+              <div class="rounded-xl bg-muted/50 p-4 text-center">
                 <Clock3 class="mx-auto size-4 text-primary" />
-                <p class="mt-1.5 text-sm font-semibold">{{ formatRelative(novel.updated_at) }}</p>
-                <p class="text-[11px] text-muted-foreground">最近更新</p>
+                <p class="mt-2 text-sm font-semibold leading-none">{{ formatRelative(novel.updated_at) }}</p>
+                <p class="mt-1.5 text-xs text-muted-foreground">最近更新</p>
               </div>
-              <div class="rounded-xl border bg-card p-3 text-center">
+              <div class="rounded-xl bg-muted/50 p-4 text-center">
                 <BookOpen class="mx-auto size-4 text-primary" />
-                <p class="mt-1.5 text-base font-semibold">{{ novel.first_no ? '可读' : '待更' }}</p>
-                <p class="text-[11px] text-muted-foreground">阅读状态</p>
+                <p class="mt-2 text-lg font-semibold leading-none">{{ novel.first_no ? '可读' : '待更' }}</p>
+                <p class="mt-1.5 text-xs text-muted-foreground">阅读状态</p>
               </div>
             </div>
 

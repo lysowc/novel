@@ -26,17 +26,17 @@ const pageTitle = computed(() => (route.meta.title as string) || '后台管理')
     </Sheet>
 
     <div class="flex min-w-0 flex-1 flex-col">
-      <header class="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/85 px-4 backdrop-blur-md sm:px-6">
+      <header class="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/85 px-4 backdrop-blur-md sm:px-6">
         <Button variant="ghost" size="icon" class="lg:hidden" @click="mobileOpen = true">
           <Menu class="size-5" />
         </Button>
         <div class="min-w-0">
-          <h1 class="truncate text-base font-semibold">{{ pageTitle }}</h1>
+          <h1 class="truncate text-lg font-semibold">{{ pageTitle }}</h1>
         </div>
         <AdminTopbar class="ml-auto" />
       </header>
 
-      <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+      <main class="flex-1 px-4 py-8 sm:px-6 lg:px-10">
         <RouterView v-slot="{ Component }">
           <Transition name="fade" mode="out-in">
             <component :is="Component" />

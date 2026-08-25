@@ -19,6 +19,9 @@ await p1.goto(`${BASE}/`, { waitUntil: 'networkidle' })
 await p1.screenshot({ path: `${outDir}/home-light.png` })
 await p1.goto(`${BASE}/read/2/1`, { waitUntil: 'networkidle' })
 await p1.screenshot({ path: `${outDir}/reader-light.png` })
+await p1.goto(`${BASE}/novel/2`, { waitUntil: 'networkidle' })
+await p1.waitForTimeout(500)
+await p1.screenshot({ path: `${outDir}/novel-detail-light.png` })
 await ctxLight.close()
 
 // ---- 前台（暗色） ----

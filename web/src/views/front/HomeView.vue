@@ -46,43 +46,49 @@ onMounted(async () => {
     <!-- Hero -->
     <section class="relative overflow-hidden">
       <div class="pointer-events-none absolute inset-0 -z-10">
-        <div class="absolute -top-32 left-1/2 h-96 w-[52rem] -translate-x-1/2 rounded-full bg-gradient-to-r from-foreground/10 via-foreground/5 to-foreground/10 blur-3xl" />
+        <div class="absolute -top-40 left-1/2 h-[30rem] w-[64rem] -translate-x-1/2 rounded-full bg-gradient-to-b from-foreground/[0.07] to-transparent blur-3xl" />
       </div>
-      <div class="mx-auto max-w-6xl px-4 pb-10 pt-16 text-center sm:px-6 sm:pt-20">
+      <div class="mx-auto max-w-6xl px-4 pb-16 pt-20 text-center sm:px-6 sm:pb-20 sm:pt-28">
         <div class="fade-up">
-          <span class="inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-xs text-muted-foreground shadow-sm">
+          <span class="inline-flex items-center gap-1.5 rounded-full border bg-card px-3.5 py-1.5 text-xs font-medium tracking-wide text-muted-foreground shadow-sm">
             <Flame class="size-3.5 text-foreground" />
             灵感 · 创作 · 阅读
           </span>
-          <h1 class="mt-5 text-4xl font-bold tracking-tight sm:text-5xl">
-            拾光<span class="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">小说</span>
+          <h1 class="mt-7 text-4xl font-bold leading-tight tracking-tight sm:text-6xl">
+            拾光小说
           </h1>
-          <p class="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+          <p class="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             让 AI 成为你的创作伙伴——从一闪而过的灵感，到完整的世界与故事。
           </p>
         </div>
 
         <!-- 继续阅读 -->
-        <div v-if="continueNovel" class="fade-up mx-auto mt-8 max-w-lg" style="animation-delay: 0.08s">
+        <div v-if="continueNovel" class="fade-up mx-auto mt-10 max-w-xl" style="animation-delay: 0.08s">
           <RouterLink
             :to="`/read/${continueNovel.novel.id}/${continueNovel.no}`"
-            class="group flex items-center gap-4 rounded-2xl border bg-card p-4 text-left shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+            class="group flex items-center gap-4 rounded-2xl border bg-card p-5 text-left shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
           >
             <CoverArt
               :title="continueNovel.novel.title"
               :cover="continueNovel.novel.cover"
               aspect="portrait"
               title-size="sm"
-              class="w-16 shrink-0"
+              class="w-16 shrink-0 rounded-lg"
             />
             <div class="min-w-0 flex-1">
-              <p class="text-xs text-muted-foreground">继续阅读</p>
-              <p class="mt-0.5 truncate text-sm font-semibold">{{ continueNovel.novel.title }}</p>
-              <p class="mt-0.5 text-xs text-muted-foreground">
+              <p class="text-xs font-medium tracking-wide text-muted-foreground">继续阅读</p>
+              <p class="mt-1 truncate text-base font-semibold">{{ continueNovel.novel.title }}</p>
+              <p class="mt-1 text-xs text-muted-foreground">
                 第 {{ continueNovel.no }} 章 · 更新于 {{ formatRelative(continueNovel.novel.updated_at) }}
               </p>
+              <div class="mt-3 h-1 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  class="h-full rounded-full bg-foreground transition-all duration-300"
+                  :style="{ width: `${Math.round((reader.progress[continueNovel.novel.id]?.percent ?? 0) * 100)}%` }"
+                />
+              </div>
             </div>
-            <ArrowRight class="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+            <ArrowRight class="size-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
           </RouterLink>
         </div>
       </div>
@@ -90,7 +96,7 @@ onMounted(async () => {
 
     <main class="mx-auto w-full max-w-6xl flex-1 px-4 sm:px-6">
       <!-- 分类 -->
-      <section class="mt-4">
+      <section class="mt-8">
         <div class="flex flex-wrap items-center gap-2">
           <RouterLink
             to="/category/0"
@@ -131,7 +137,7 @@ onMounted(async () => {
         >
           <Button @click="router.push('/admin')">进入后台</Button>
         </EmptyState>
-        <div v-else class="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
+        <div v-else class="grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
           <NovelCard v-for="n in home.recent_updates" :key="n.id" :novel="n" />
         </div>
       </section>

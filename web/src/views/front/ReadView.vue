@@ -45,6 +45,7 @@ const paragraphs = computed(() =>
 
 const fontSizePx = computed(() => `${reader.fontSize}px`)
 const widthClass = computed(() => WIDTH_STYLES[reader.width])
+const progress = ref(0)
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 let routeNo: number | null = null
@@ -76,6 +77,10 @@ async function restoreScroll() {
 }
 
 function onScroll() {
+  const el = contentRef.value
+  if (el) {
+    progress.value = el.scrollHeight > el.clientHeight ? el.scrollTop / (el.scrollHeight - el.clientHeight) : 0
+  }
   if (saveTimer) return
   saveTimer = setTimeout(() => {
     saveTimer = null
@@ -124,7 +129,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="flex h-screen flex-col bg-background">
     <!-- 顶部窄栏 -->
-    <header class="z-40 shrink-0 border-b bg-background/85 backdrop-blur-md">
+    <header class="relative z-40 shrink-0 border-b bg-background/85 backdrop-blur-md">
       <div class="mx-auto flex h-12 max-w-5xl items-center justify-between gap-2 px-3 sm:px-4">
         <div class="flex min-w-0 items-center gap-1.5">
           <Button variant="ghost" size="icon" class="size-8" title="返回详情" @click="router.push(`/novel/${novelId}`)">
@@ -237,6 +242,13 @@ onBeforeUnmount(() => {
           </DropdownMenu>
         </div>
       </div>
+      <!-- 阅读进度条 -->
+      <div class="absolute inset-x-0 -bottom-px h-0.5">
+        <div
+          class="h-full bg-foreground/80 transition-[width] duration-150 ease-out"
+          :style="{ width: `${progress * 100}%` }"
+        />
+      </div>
     </header>
 
     <!-- 正文（独立滚动容器） -->
@@ -250,12 +262,13 @@ onBeforeUnmount(() => {
         <article>
           <header class="mb-10 text-center">
             <p class="text-xs tracking-widest text-muted-foreground">第 {{ chapterNo }} 章</p>
-            <h1 class="mt-2 font-serif text-2xl font-bold" :style="{ fontSize: `calc(${fontSizePx} * 1.3)` }">
+            <h1 class="mt-3 font-serif text-2xl font-bold" :style="{ fontSize: `calc(${fontSizePx} * 1.3)` }">
               {{ chapter.title }}
             </h1>
             <p class="mt-3 text-xs text-muted-foreground">
               {{ formatNumber(chapter.word_count) }} 字 · {{ chapter.updated_at?.slice(0, 10) }}
             </p>
+            <div class="mx-auto mt-8 h-px w-14 bg-border" />
           </header>
 
           <div class="prose-novel" :style="{ fontSize: fontSizePx }">
@@ -273,7 +286,7 @@ onBeforeUnmount(() => {
             <BookOpen class="size-4" />
             返回详情
           </Button>
-          <Button variant="outline" class="gap-2" :disabled="!nextNo" @click="goChapter(nextNo)">
+          <Button class="gap-2" :disabled="!nextNo" @click="goChapter(nextNo)">
             下一章
             <ChevronRight class="size-4" />
           </Button>

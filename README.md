@@ -42,11 +42,18 @@ php webman app:install    # 建表 + 管理员/分类/Prompt/系统配置
 # 4. 启动后端（默认 http://127.0.0.1:8787）
 php start.php start
 
-# 5. 前端开发模式（http://localhost:5173，/api 代理到 8787）
+# 5. 前端开发模式（http://localhost:5173，/api 代理到 8787，默认走真实后端）
 cd web && pnpm dev
+# 纯前端演示（不连后端）: VITE_USE_MOCK=1 pnpm dev
 
 # 6. 前端生产构建（产物输出到 public/）
 cd web && pnpm build
+```
+
+## 验收
+
+```bash
+bash test/acceptance.sh   # 全链路自动验收（登录/CRUD/鉴权/AI 任务/SSE 流式/摘要/记忆/阅读/日志）
 ```
 
 ## AI 配置

@@ -101,8 +101,8 @@ Route::group('/api/admin', function () {
 
 // ============ SPA 兜底 ============
 Route::fallback(function (Request $request) {
-    $path = $request->path();
-    if (str_starts_with($path, 'api')) {
+    $path = ltrim($request->path(), '/');
+    if ($path === 'api' || str_starts_with($path, 'api/')) {
         return json(['code' => 404, 'msg' => '接口不存在', 'data' => null]);
     }
     $file = public_path() . '/index.html';

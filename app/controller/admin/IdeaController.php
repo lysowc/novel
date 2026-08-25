@@ -90,7 +90,7 @@ class IdeaController
         $list = IdeaChat::where('idea_id', $id)->orderBy('id')->get()->map(function (IdeaChat $chat) {
             return ['id' => $chat->id, 'role' => $chat->role, 'content' => $chat->content, 'created_at' => $chat->created_at];
         });
-        return ok(['list' => $list]);
+        return ok($list);
     }
 
     /**

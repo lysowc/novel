@@ -25,7 +25,7 @@ class AiModelController
                 'updated_at' => $model->updated_at,
             ];
         });
-        return ok(['list' => $list]);
+        return ok($list);
     }
 
     public function store(Request $request)

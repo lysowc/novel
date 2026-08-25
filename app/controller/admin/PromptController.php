@@ -21,7 +21,7 @@ class PromptController
                 'updated_at' => $prompt->updated_at,
             ];
         });
-        return ok(['list' => $list]);
+        return ok($list);
     }
 
     public function update(Request $request, int $id)

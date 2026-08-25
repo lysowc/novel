@@ -22,7 +22,7 @@ class AiProviderController
                 'updated_at' => $provider->updated_at,
             ];
         });
-        return ok(['list' => $list]);
+        return ok($list);
     }
 
     public function store(Request $request)

@@ -21,15 +21,11 @@ class ConfigController
     public function index(Request $request)
     {
         $map = SystemConfig::allAsMap();
-        $list = [];
+        $result = [];
         foreach (self::KEYS as $key => $description) {
-            $list[] = [
-                'key' => $key,
-                'value' => $map[$key] ?? self::defaultValue($key),
-                'description' => $description,
-            ];
+            $result[$key] = $map[$key] ?? self::defaultValue($key);
         }
-        return ok(['list' => $list]);
+        return ok($result);
     }
 
     public function update(Request $request)

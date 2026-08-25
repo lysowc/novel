@@ -136,7 +136,7 @@ class NovelController
                 'updated_at' => $chapter->updated_at,
             ];
         });
-        return ok(['list' => $list]);
+        return ok($list);
     }
 
     /**

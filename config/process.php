@@ -1,20 +1,9 @@
 <?php
-/**
- * This file is part of webman.
- *
- * Licensed under The MIT License
- * For full copyright and license information, please see the MIT-LICENSE.txt
- * Redistributions of files must retain the above copyright notice.
- *
- * @author    walkor<walkor@workerman.net>
- * @copyright walkor<walkor@workerman.net>
- * @link      http://www.workerman.net/
- * @license   http://www.opensource.org/licenses/mit-license.php MIT License
- */
 
 use support\Log;
 use support\Request;
 use app\process\Http;
+use app\process\AiWorker;
 
 global $argv;
 
@@ -34,6 +23,16 @@ return [
             'appPath' => app_path(),
             'publicPath' => public_path()
         ]
+    ],
+    // AI 任务消费进程
+    'ai_worker' => [
+        'handler' => AiWorker::class,
+        'listen' => '',
+        'count' => 1,
+        'user' => '',
+        'group' => '',
+        'reloadable' => true,
+        'constructor' => [],
     ],
     // File update detection and automatic reload
     'monitor' => [

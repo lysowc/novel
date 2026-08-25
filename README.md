@@ -1,70 +1,85 @@
-<div style="padding:18px;max-width: 1024px;margin:0 auto;background-color:#fff;color:#333">
-<h1>webman</h1>
+# AI 小说工坊
 
-基于<a href="https://www.workerman.net" target="__blank">workerman</a>开发的超高性能PHP框架
+基于 **Webman（PHP）+ Vue 3 + shadcn-vue** 的个人 AI 长篇小说创作与阅读系统。
 
+核心链路：
 
-<h1>学习</h1>
+```
+AI 点子聊天 → 保存点子 → 创建小说 → AI 生成设定 → AI 生成章节大纲
+→ 逐章生成正文（SSE 流式）→ 生成章节摘要 → 更新小说记忆
+→ AI 续写 → 摘要 → 记忆 → …… 循环
+```
 
-<ul>
-  <li>
-    <a href="https://www.workerman.net/webman" target="__blank">主页 / Home page</a>
-  </li>
-  <li>
-    <a href="https://webman.workerman.net" target="__blank">文档 / Document</a>
-  </li>
-  <li>
-    <a href="https://www.workerman.net/doc/webman/install.html" target="__blank">安装 / Install</a>
-  </li>
-  <li>
-    <a href="https://www.workerman.net/questions" target="__blank">问答 / Questions</a>
-  </li>
-  <li>
-    <a href="https://www.workerman.net/apps" target="__blank">市场 / Apps</a>
-  </li>
-  <li>
-    <a href="https://www.workerman.net/sponsor" target="__blank">赞助 / Sponsors</a>
-  </li>
-  <li>
-    <a href="https://www.workerman.net/doc/webman/thanks.html" target="__blank">致谢 / Thanks</a>
-  </li>
-</ul>
+核心原则：**正文是历史，摘要是索引，小说记忆是当前状态**。续写上下文分层组装（设定 + 记忆 + 摘要 + 最近 N 章正文），不把整本小说塞给 AI。
 
-<div style="float:left;padding-bottom:30px;">
+## 技术栈
 
-  <h1>赞助商</h1>
+- 后端：PHP 8.5 + Webman 2 + MySQL 8 + Redis + Guzzle（OpenAI 兼容接口）
+- 前端：Vue 3 + TypeScript + Vite + Tailwind CSS v4 + shadcn-vue + Pinia（目录 `web/`）
+- AI：任意 OpenAI Compatible Provider（DeepSeek / OpenAI / Qwen / Gemini 等），流式 + 异步任务队列
 
-  <h4>特别赞助</h4>
-  <a href="https://www.crmeb.com/?form=workerman" target="__blank">
-    <img src="https://www.workerman.net/img/sponsors/6429/20230719111500.svg" width="200">
-  </a>
+## 环境要求
 
-  <h4>铂金赞助</h4>
-  <a href="https://www.fadetask.com/?from=workerman" target="__blank"><img src="https://www.workerman.net/img/sponsors/1/20230719084316.png" width="200"></a>
-  <a href="https://www.yilianyun.net/?from=workerman" target="__blank" style="margin-left:20px;"><img src="https://www.workerman.net/img/sponsors/6218/20230720114049.png" width="200"></a>
+- PHP >= 8.4（本机推荐 Homebrew `php@8.5`，依赖 Symfony 8 / Laravel 13 要求 8.4+）
+- MySQL 8、Redis
+- Node 20+ / pnpm
 
+## 快速开始
 
-</div>
+```bash
+# 1. 安装依赖
+composer install
+cd web && pnpm install && cd ..
 
+# 2. 配置 .env（复制 .env.example，填数据库/Redis）
+cp .env.example .env
 
-<div style="float:left;padding-bottom:30px;clear:both">
+# 3. 初始化数据库（建表 + 默认数据）
+php webman migrate        # 仅建表
+php webman app:install    # 建表 + 管理员/分类/Prompt/系统配置
+# 默认管理员：admin / admin123（可用 -u -p 自定义）
 
-  <h1>请作者喝咖啡</h1>
+# 4. 启动后端（默认 http://127.0.0.1:8787）
+php start.php start
 
-<img src="https://www.workerman.net/img/wx_donate.png" width="200">
-<img src="https://www.workerman.net/img/ali_donate.png" width="200">
-<br>
-<b>如果您觉得webman对您有所帮助，欢迎捐赠。</b>
+# 5. 前端开发模式（http://localhost:5173，/api 代理到 8787）
+cd web && pnpm dev
 
+# 6. 前端生产构建（产物输出到 public/）
+cd web && pnpm build
+```
 
-</div>
+## AI 配置
 
+后台「AI 配置」添加 Provider（name + base_url + api_key）与 Model（如 `deepseek-chat`），设为默认即可。所有 AI 调用统一走 OpenAI 兼容接口。
 
-<div style="clear: both">
-<h1>LICENSE</h1>
-The webman is open-sourced software licensed under the MIT.
-</div>
+本地无 API Key 时可使用 mock 服务器跑通全链路：
 
-</div>
+```bash
+php -S 127.0.0.1:8899 test/mock_ai_server.php
+# 后台添加 Provider: base_url = http://127.0.0.1:8899
+```
 
+## 目录结构
 
+```
+app/
+  controller/api/      前台 API（首页/分类/详情/目录/阅读）
+  controller/admin/    后台 API（需登录）
+  service/             AiClient / AiService / AiTaskService / ContextBuilder / PromptService
+  model/               14 张表的模型
+  process/AiWorker.php AI 任务消费进程（Redis 队列）
+  command/             migrate / app:install
+config/route.php       全部路由 + SPA 兜底
+database/migrations/   SQL 迁移
+web/                   Vue 3 前端
+test/mock_ai_server.php 本地 mock AI（联调用）
+```
+
+## 常用命令
+
+```bash
+php start.php start|stop|restart|status   # 服务管理
+php webman migrate [fresh]                # 迁移（fresh 清库重建）
+php webman app:install                    # 初始化数据
+```

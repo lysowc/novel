@@ -24,7 +24,7 @@
     "source": "https://github.com/walkor/webman"
   },
   "require": {
-    "php": ">=8.1",
+    "php": ">=8.3",
     "workerman/webman-framework": "^2.1",
     "monolog/monolog": "^2.0",
     "webman/console": "^2.2",
@@ -35,6 +35,8 @@
     "webman/redis": "^2.1",
     "webman/validation": "^2.2",
     "vlucas/phpdotenv": "^5.6",
+    "guzzlehttp/guzzle": "^7.15",
+    "predis/predis": "^2.3",
     "workerman/crontab": "^1.0",
     "webman/limiter": "^2.2",
     "symfony/translation": "^8.1",

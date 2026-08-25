@@ -56,22 +56,27 @@ export function hashCode(s: string): number {
   return Math.abs(h)
 }
 
-/** 封面渐变色板（8 套，现代低饱和 → 浓郁） */
+/** 封面渐变色板（8 套黑白灰调，与整体单色设计一致） */
 export const COVER_PALETTES: [string, string][] = [
-  ['#667eea', '#764ba2'],
-  ['#f093fb', '#f5576c'],
-  ['#4facfe', '#00f2fe'],
-  ['#43e97b', '#38f9d7'],
-  ['#fa709a', '#fee140'],
-  ['#30cfd0', '#330867'],
-  ['#ff9a9e', '#fecfef'],
-  ['#a18cd1', '#fbc2eb'],
+  ['#09090b', '#3f3f46'],
+  ['#18181b', '#71717a'],
+  ['#27272a', '#a1a1aa'],
+  ['#3f3f46', '#d4d4d8'],
+  ['#0a0a0a', '#52525b'],
+  ['#52525b', '#18181b'],
+  ['#71717a', '#27272a'],
+  ['#a1a1aa', '#3f3f46'],
 ]
+
+/** 渐变角度（随哈希变化，增加区分度） */
+const COVER_ANGLES = [135, 155, 120, 160, 145, 125, 140, 115]
 
 /** 根据标题哈希取渐变色板 */
 export function coverGradient(title: string): string {
-  const [from, to] = COVER_PALETTES[hashCode(title || 'novel') % COVER_PALETTES.length]
-  return `linear-gradient(135deg, ${from} 0%, ${to} 100%)`
+  const h = Math.abs(hashCode(title || 'novel'))
+  const [from, to] = COVER_PALETTES[h % COVER_PALETTES.length]
+  const angle = COVER_ANGLES[h % COVER_ANGLES.length]
+  return `linear-gradient(${angle}deg, ${from} 0%, ${to} 100%)`
 }
 
 /** 章节字数估算（中文按字符数） */

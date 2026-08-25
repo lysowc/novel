@@ -177,7 +177,7 @@ watch(
             <span>任务 {{ taskId ?? '创建中' }} · {{ statusText || 'AI 正在创作…' }}</span>
           </template>
           <template v-else-if="phase === 'done'">
-            <CheckCircle2 class="size-3 text-emerald-500" />
+            <CheckCircle2 class="size-3 text-foreground" />
             <span>已完成</span>
           </template>
           <template v-else-if="phase === 'error'">

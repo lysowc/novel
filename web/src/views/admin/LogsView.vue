@@ -98,7 +98,7 @@ onMounted(load)
             <TableCell>
               <span
                 class="rounded-full px-2 py-0.5 text-[11px] font-medium"
-                :class="l.status === 1 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-destructive/10 text-destructive'"
+                :class="l.status === 1 ? 'bg-foreground/10 text-foreground' : 'bg-destructive/10 text-destructive'"
               >
                 {{ l.status === 1 ? '成功' : '失败' }}
               </span>

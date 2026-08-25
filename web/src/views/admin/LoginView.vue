@@ -55,7 +55,7 @@ async function onSubmit() {
   <div class="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
     <!-- 背景光晕 -->
     <div class="pointer-events-none absolute inset-0 -z-10">
-      <div class="absolute -top-40 left-1/2 h-[28rem] w-[36rem] -translate-x-1/2 rounded-full bg-gradient-to-br from-indigo-300/40 via-violet-300/30 to-fuchsia-300/40 blur-3xl dark:from-indigo-600/20 dark:via-violet-600/20 dark:to-fuchsia-600/20" />
+      <div class="absolute -top-40 left-1/2 h-[28rem] w-[36rem] -translate-x-1/2 rounded-full bg-gradient-to-br from-foreground/10 via-foreground/5 to-foreground/10 blur-3xl" />
     </div>
 
     <div class="absolute right-5 top-5">
@@ -64,7 +64,7 @@ async function onSubmit() {
 
     <div class="fade-up w-full max-w-sm">
       <div class="mb-8 text-center">
-        <span class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-xl shadow-indigo-500/30">
+        <span class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-foreground text-background shadow-xl">
           <BookOpen class="size-7" />
         </span>
         <h1 class="mt-4 text-2xl font-bold tracking-tight">拾光小说 · 后台</h1>

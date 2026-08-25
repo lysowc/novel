@@ -28,7 +28,7 @@ defineProps<{ novel: Novel }>()
       </div>
       <div
         v-if="novel.status === 'finished'"
-        class="absolute right-2.5 top-2.5 rounded-full bg-amber-500/90 px-2 py-0.5 text-[11px] font-medium text-white"
+        class="absolute right-2.5 top-2.5 rounded-full bg-foreground/85 px-2 py-0.5 text-[11px] font-medium text-background"
       >
         完结
       </div>

@@ -149,8 +149,8 @@ function openAi(n: Novel) {
 
 const statusMap: Record<NovelStatus, { label: string; cls: string }> = {
   draft: { label: '草稿', cls: 'bg-muted text-muted-foreground' },
-  published: { label: '连载中', cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
-  finished: { label: '已完结', cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
+  published: { label: '连载中', cls: 'bg-foreground text-background' },
+  finished: { label: '已完结', cls: 'border border-foreground/25 text-muted-foreground' },
 }
 
 onMounted(async () => {

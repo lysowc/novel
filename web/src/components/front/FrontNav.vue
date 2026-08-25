@@ -9,7 +9,7 @@ withDefaults(defineProps<{ siteName?: string }>(), { siteName: '拾光小说' })
   <header class="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
     <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
       <RouterLink to="/" class="group flex items-center gap-2.5">
-        <span class="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/25 transition-transform duration-300 group-hover:scale-105">
+        <span class="flex size-9 items-center justify-center rounded-xl bg-foreground text-background shadow-md transition-transform duration-300 group-hover:scale-105">
           <BookOpen class="size-5" />
         </span>
         <span class="text-lg font-bold tracking-wide">{{ siteName }}</span>

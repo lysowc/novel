@@ -151,7 +151,7 @@ onMounted(async () => {
       >
         <div class="flex items-start justify-between gap-2">
           <div class="flex min-w-0 items-center gap-2.5">
-            <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+            <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-foreground/10 text-foreground">
               <Lightbulb class="size-4.5" />
             </span>
             <div class="min-w-0">
@@ -164,7 +164,7 @@ onMounted(async () => {
           </div>
           <span
             class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium"
-            :class="idea.status === 'used' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-muted text-muted-foreground'"
+            :class="idea.status === 'used' ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'"
           >
             {{ idea.status === 'used' ? '已使用' : '未使用' }}
           </span>

@@ -188,7 +188,7 @@ onBeforeUnmount(() => controller.value?.abort())
           v-if="messages.length === 0"
           class="rounded-2xl border border-dashed bg-card p-8 text-center text-sm text-muted-foreground"
         >
-          <Lightbulb class="mx-auto size-8 text-amber-400" />
+          <Lightbulb class="mx-auto size-8 text-foreground/70" />
           <p class="mt-3 font-medium text-foreground">和 AI 聊聊这个点子吧</p>
           <p class="mt-1 text-xs">展开设定、寻找冲突、完善人物，让灵感长成故事。</p>
         </div>
@@ -202,7 +202,7 @@ onBeforeUnmount(() => controller.value?.abort())
           </div>
           <!-- AI 消息 -->
           <div v-else class="flex gap-2.5">
-            <span class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md">
+            <span class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground text-background shadow-md">
               <Sparkles class="size-4" />
             </span>
             <div class="max-w-[85%] min-w-0">

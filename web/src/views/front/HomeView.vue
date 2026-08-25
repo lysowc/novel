@@ -46,16 +46,16 @@ onMounted(async () => {
     <!-- Hero -->
     <section class="relative overflow-hidden">
       <div class="pointer-events-none absolute inset-0 -z-10">
-        <div class="absolute -top-32 left-1/2 h-96 w-[52rem] -translate-x-1/2 rounded-full bg-gradient-to-r from-indigo-300/40 via-violet-300/30 to-fuchsia-300/40 blur-3xl dark:from-indigo-600/20 dark:via-violet-600/20 dark:to-fuchsia-600/20" />
+        <div class="absolute -top-32 left-1/2 h-96 w-[52rem] -translate-x-1/2 rounded-full bg-gradient-to-r from-foreground/10 via-foreground/5 to-foreground/10 blur-3xl" />
       </div>
       <div class="mx-auto max-w-6xl px-4 pb-10 pt-16 text-center sm:px-6 sm:pt-20">
         <div class="fade-up">
           <span class="inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-xs text-muted-foreground shadow-sm">
-            <Flame class="size-3.5 text-orange-500" />
+            <Flame class="size-3.5 text-foreground" />
             灵感 · 创作 · 阅读
           </span>
           <h1 class="mt-5 text-4xl font-bold tracking-tight sm:text-5xl">
-            拾光<span class="bg-gradient-to-r from-indigo-500 to-violet-600 bg-clip-text text-transparent">小说</span>
+            拾光<span class="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">小说</span>
           </h1>
           <p class="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
             让 AI 成为你的创作伙伴——从一闪而过的灵感，到完整的世界与故事。

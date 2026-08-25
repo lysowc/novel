@@ -28,7 +28,7 @@ defineEmits<{ (e: 'navigate'): void }>()
 <template>
   <aside class="flex w-60 shrink-0 flex-col border-r bg-sidebar">
     <div class="flex h-14 items-center gap-2.5 border-b px-5">
-      <span class="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md">
+      <span class="flex size-8 items-center justify-center rounded-lg bg-foreground text-background shadow-md">
         <BookOpen class="size-4" />
       </span>
       <span class="text-sm font-bold">拾光小说 · 后台</span>

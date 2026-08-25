@@ -39,9 +39,9 @@ const tags = computed(() =>
 
 const statusText = computed(() => {
   switch (novel.value?.status) {
-    case 'draft': return { label: '连载中', cls: 'bg-sky-500/10 text-sky-600 dark:text-sky-400' }
-    case 'published': return { label: '连载中', cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' }
-    case 'finished': return { label: '已完结', cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' }
+    case 'draft': return { label: '创作中', cls: 'bg-muted text-muted-foreground' }
+    case 'published': return { label: '连载中', cls: 'bg-foreground text-background' }
+    case 'finished': return { label: '已完结', cls: 'border border-foreground/25 text-muted-foreground' }
     default: return { label: '—', cls: '' }
   }
 })

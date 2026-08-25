@@ -97,7 +97,7 @@ onMounted(load)
         <span class="text-sm font-medium">记忆内容</span>
         <span
           v-if="parsed !== null"
-          class="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-600 dark:text-emerald-400"
+          class="rounded-full bg-foreground/10 px-2 py-0.5 text-[11px] text-foreground"
         >
           JSON 合法 · {{ parsed.length }} 条
         </span>

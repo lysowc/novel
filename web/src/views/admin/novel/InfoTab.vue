@@ -106,7 +106,7 @@ async function togglePublic() {
           <Button
             variant="outline"
             class="justify-start gap-2"
-            :class="form.status === 'published' ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : ''"
+            :class="form.status === 'published' ? 'border-foreground/60 bg-foreground/10 text-foreground' : ''"
             @click="setStatus('published', '已发布')"
           >
             <Eye class="size-4" /> 发布（连载中）
@@ -114,7 +114,7 @@ async function togglePublic() {
           <Button
             variant="outline"
             class="justify-start gap-2"
-            :class="form.status === 'finished' ? 'border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400' : ''"
+            :class="form.status === 'finished' ? 'border-foreground/60 bg-foreground/10 text-foreground' : ''"
             @click="setStatus('finished', '已标记完结')"
           >
             <CheckCircle2 class="size-4" /> 标记完结
@@ -122,7 +122,7 @@ async function togglePublic() {
           <Button
             variant="outline"
             class="justify-start gap-2"
-            :class="form.status === 'draft' ? 'border-sky-500/50 bg-sky-500/10 text-sky-600 dark:text-sky-400' : ''"
+            :class="form.status === 'draft' ? 'border-foreground/60 bg-foreground/10 text-foreground' : ''"
             @click="setStatus('draft', '已存为草稿')"
           >
             <EyeOff class="size-4" /> 存为草稿

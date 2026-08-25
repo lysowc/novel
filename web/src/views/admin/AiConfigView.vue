@@ -236,7 +236,7 @@ onMounted(load)
           >
             <div class="flex items-start justify-between">
               <div class="flex items-center gap-3">
-                <span class="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md">
+                <span class="flex size-10 items-center justify-center rounded-xl bg-foreground text-background shadow-md">
                   <Cable class="size-5" />
                 </span>
                 <div>

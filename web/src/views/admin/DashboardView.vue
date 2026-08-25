@@ -16,19 +16,19 @@ const stats = computed(() => {
   const d = data.value
   if (!d) return []
   return [
-    { label: '小说总数', value: d.novel_count, icon: BookOpen, tint: 'from-indigo-500 to-violet-500' },
-    { label: '章节总数', value: d.chapter_count, icon: ScrollText, tint: 'from-sky-500 to-cyan-500' },
-    { label: '累计字数', value: formatNumber(d.total_words) + ' 字', icon: Feather, tint: 'from-emerald-500 to-teal-500' },
-    { label: '点子数量', value: d.idea_count, icon: Lightbulb, tint: 'from-amber-500 to-orange-500' },
-    { label: '运行中任务', value: d.running_tasks, icon: LoaderCircle, tint: 'from-rose-500 to-pink-500' },
-    { label: '今日新增章节', value: d.today_chapters, icon: FileText, tint: 'from-fuchsia-500 to-purple-500' },
+    { label: '小说总数', value: d.novel_count, icon: BookOpen },
+    { label: '章节总数', value: d.chapter_count, icon: ScrollText },
+    { label: '累计字数', value: formatNumber(d.total_words) + ' 字', icon: Feather },
+    { label: '点子数量', value: d.idea_count, icon: Lightbulb },
+    { label: '运行中任务', value: d.running_tasks, icon: LoaderCircle },
+    { label: '今日新增章节', value: d.today_chapters, icon: FileText },
   ]
 })
 
 const taskStatusMap: Record<TaskStatus, { label: string; cls: string; icon: typeof CheckCircle2 }> = {
   pending: { label: '排队中', cls: 'bg-muted text-muted-foreground', icon: Clock3 },
-  running: { label: '运行中', cls: 'bg-sky-500/10 text-sky-600 dark:text-sky-400', icon: LoaderCircle },
-  success: { label: '成功', cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', icon: CheckCircle2 },
+  running: { label: '运行中', cls: 'bg-foreground/10 text-foreground', icon: LoaderCircle },
+  success: { label: '成功', cls: 'bg-foreground text-background', icon: CheckCircle2 },
   failed: { label: '失败', cls: 'bg-destructive/10 text-destructive', icon: XCircle },
 }
 
@@ -57,8 +57,7 @@ onMounted(async () => {
         class="fade-up rounded-2xl border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
       >
         <span
-          class="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-md"
-          :class="s.tint"
+          class="flex size-9 items-center justify-center rounded-xl bg-foreground text-background shadow-md"
         >
           <component :is="s.icon" class="size-4.5" />
         </span>
@@ -118,7 +117,7 @@ onMounted(async () => {
             <li v-for="l in data.recent_logs" :key="l.id" class="flex items-center gap-3 px-5 py-3">
               <span
                 class="size-2 shrink-0 rounded-full"
-                :class="l.status === 1 ? 'bg-emerald-500' : 'bg-destructive'"
+                :class="l.status === 1 ? 'bg-foreground' : 'bg-destructive'"
               />
               <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-medium">

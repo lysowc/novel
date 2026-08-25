@@ -203,7 +203,7 @@ onMounted(load)
                 <Button variant="ghost" size="icon" class="size-8 text-primary" title="AI 重新生成" @click="startAi('regenerate_chapter', c)">
                   <RefreshCw class="size-4" />
                 </Button>
-                <Button variant="ghost" size="icon" class="size-8 text-amber-500" title="AI 补摘要" @click="startAi('generate_summary', c)">
+                <Button variant="ghost" size="icon" class="size-8 text-muted-foreground hover:text-foreground" title="AI 补摘要" @click="startAi('generate_summary', c)">
                   <Wand2 class="size-4" />
                 </Button>
                 <Button variant="ghost" size="icon" class="size-8 text-destructive" title="删除" @click="deleting = c">

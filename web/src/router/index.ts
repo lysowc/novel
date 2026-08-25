@@ -67,7 +67,7 @@ const router = createRouter({
           path: 'ideas/:id/chat',
           name: 'admin-idea-chat',
           component: () => import('@/views/admin/IdeaChatView.vue'),
-          meta: { title: '点子聊天' },
+          meta: { title: '点子聊天', bare: true },
         },
         {
           path: 'ai/config',

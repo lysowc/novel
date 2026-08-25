@@ -232,7 +232,7 @@ onMounted(async () => {
           <TableBody>
             <TableRow v-for="n in list.list" :key="n.id" class="group">
               <TableCell>
-                <CoverArt :title="n.title" :cover="n.cover" aspect="portrait" title-size="sm" class="w-10" />
+                <CoverArt :title="n.title" :cover="n.cover" aspect="portrait" title-size="xs" class="w-10" />
               </TableCell>
               <TableCell>
                 <p class="line-clamp-1 font-medium">{{ n.title }}</p>

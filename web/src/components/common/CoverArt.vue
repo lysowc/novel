@@ -10,14 +10,22 @@ const props = withDefaults(
     title: string
     cover?: string
     aspect?: Aspect
-    /** 标题字号大小 */
-    titleSize?: 'sm' | 'md' | 'lg'
+    /** 标题字号大小（xs 仅显示首字，用于列表小缩略图） */
+    titleSize?: 'xs' | 'sm' | 'md' | 'lg'
     class?: string
   }>(),
   { cover: '', aspect: 'portrait', titleSize: 'md' },
 )
 
 const gradient = computed(() => coverGradient(props.title))
+
+const displayTitle = computed(() => {
+  const title = props.title || '未'
+  if (props.titleSize === 'xs') {
+    return Array.from(title)[0] ?? '未'
+  }
+  return props.title || '未命名'
+})
 
 const aspectClass: Record<Aspect, string> = {
   portrait: 'aspect-[3/4]',
@@ -27,6 +35,7 @@ const aspectClass: Record<Aspect, string> = {
 }
 
 const titleClass: Record<string, string> = {
+  xs: 'text-[11px] leading-none',
   sm: 'text-sm leading-snug',
   md: 'text-base leading-snug',
   lg: 'text-xl leading-normal',
@@ -35,8 +44,8 @@ const titleClass: Record<string, string> = {
 
 <template>
   <div
-    class="cover-art relative overflow-hidden rounded-xl bg-muted shadow-sm transition-transform duration-300"
-    :class="cn(aspectClass[aspect], props.class)"
+    class="cover-art relative overflow-hidden bg-muted shadow-sm transition-transform duration-300"
+    :class="cn(aspectClass[aspect], props.titleSize === 'xs' ? 'rounded-md' : 'rounded-xl', props.class)"
     :style="cover ? undefined : { background: gradient }"
   >
     <img
@@ -51,8 +60,11 @@ const titleClass: Record<string, string> = {
       v-if="!cover"
       class="relative flex h-full w-full items-center justify-center px-3 text-center text-white"
     >
-      <span class="cover-title line-clamp-4" :class="titleClass[titleSize]">
-        {{ title || '未命名' }}
+      <span
+        class="cover-title"
+        :class="cn(titleSize === 'xs' ? 'line-clamp-1' : 'line-clamp-4', titleClass[titleSize])"
+      >
+        {{ displayTitle }}
       </span>
     </div>
     <slot />

@@ -150,91 +150,92 @@ onBeforeUnmount(() => controller.value?.abort())
 </script>
 
 <template>
-  <div class="flex h-[calc(100vh-3.5rem)] flex-col">
+  <div class="flex min-h-0 flex-1 flex-col bg-background">
     <!-- 顶部栏 -->
-    <div class="flex flex-wrap items-center gap-2 border-b bg-background/85 px-4 py-3 backdrop-blur-md">
-      <Button variant="ghost" size="icon" class="size-8" @click="router.push('/admin/ideas')">
-        <ArrowLeft class="size-4" />
+    <header class="flex shrink-0 items-center gap-3 border-b bg-background px-4 py-3 sm:px-6">
+      <Button variant="ghost" size="icon" class="size-9 shrink-0" @click="router.push('/admin/ideas')">
+        <ArrowLeft class="size-4.5" />
       </Button>
       <div class="min-w-0 flex-1">
-        <p class="truncate text-sm font-semibold">{{ idea?.title || '点子聊天' }}</p>
-        <p class="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <p class="truncate text-[15px] font-semibold">{{ idea?.title || '点子聊天' }}</p>
+        <p class="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Lightbulb class="size-3" />
           {{ idea?.category_name || '未分类' }}
           <span v-if="idea">· {{ formatRelative(idea.updated_at) }}</span>
         </p>
       </div>
-      <div class="flex gap-2">
+      <div class="flex shrink-0 gap-2">
         <Button variant="outline" size="sm" class="gap-1.5" @click="onSave">
           <Save class="size-3.5" />
           保存点子
         </Button>
         <Button size="sm" class="gap-1.5" @click="onCreateNovel">
           <BookOpenCheck class="size-3.5" />
-          根据点子创建小说
+          创建小说
         </Button>
       </div>
-    </div>
+    </header>
 
-    <!-- 消息区 -->
-    <div ref="scrollRef" class="min-h-0 flex-1 overflow-y-auto bg-muted/20">
+    <!-- 消息区（与页面同底色，无边界感） -->
+    <div ref="scrollRef" class="min-h-0 flex-1 overflow-y-auto">
       <div v-if="loading" class="flex h-full items-center justify-center gap-2 text-sm text-muted-foreground">
         <LoaderCircle class="size-5 animate-spin" />
         加载中…
       </div>
 
-      <div v-else class="mx-auto max-w-3xl space-y-5 px-4 py-6">
-        <div
-          v-if="messages.length === 0"
-          class="rounded-2xl border border-dashed bg-card p-8 text-center text-sm text-muted-foreground"
-        >
-          <Lightbulb class="mx-auto size-8 text-foreground/70" />
-          <p class="mt-3 font-medium text-foreground">和 AI 聊聊这个点子吧</p>
-          <p class="mt-1 text-xs">展开设定、寻找冲突、完善人物，让灵感长成故事。</p>
+      <div v-else class="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+        <div v-if="messages.length === 0" class="flex flex-col items-center pt-16 text-center">
+          <span class="flex size-14 items-center justify-center rounded-full bg-foreground/5">
+            <Lightbulb class="size-6 text-foreground/60" />
+          </span>
+          <p class="mt-4 text-base font-medium">和 AI 聊聊这个点子吧</p>
+          <p class="mt-1.5 text-sm text-muted-foreground">展开设定、寻找冲突、完善人物，让灵感长成故事。</p>
         </div>
 
-        <template v-for="m in messages" :key="m.id">
-          <!-- 用户消息 -->
-          <div v-if="m.role === 'user'" class="flex justify-end gap-2.5">
-            <div class="max-w-[80%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-sm text-primary-foreground shadow-sm">
-              {{ m.content }}
-            </div>
-          </div>
-          <!-- AI 消息 -->
-          <div v-else class="flex gap-2.5">
-            <span class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground text-background shadow-md">
-              <Sparkles class="size-4" />
-            </span>
-            <div class="max-w-[85%] min-w-0">
-              <div
-                class="rounded-2xl rounded-tl-md border bg-card px-4 py-2.5 text-sm leading-relaxed shadow-sm"
-                :class="m.content ? '' : 'min-h-10'"
-              >
-                <span class="whitespace-pre-wrap">{{ m.content }}</span>
-                <span v-if="streaming && m.id === streamingMsg?.id" class="ml-0.5 inline-block h-4 w-1.5 animate-pulse rounded bg-primary align-middle" />
+        <div v-else class="space-y-7">
+          <template v-for="m in messages" :key="m.id">
+            <!-- 用户消息：黑色气泡 -->
+            <div v-if="m.role === 'user'" class="flex justify-end">
+              <div class="max-w-[75%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-foreground px-4 py-2.5 text-sm leading-relaxed text-background">
+                {{ m.content }}
               </div>
-              <p class="mt-1 px-1 text-[10px] text-muted-foreground/70">{{ formatRelative(m.created_at) }}</p>
             </div>
-          </div>
-        </template>
+            <!-- AI 消息：无框纯文本 -->
+            <div v-else class="flex gap-3">
+              <span class="mt-1 flex size-7 shrink-0 items-center justify-center rounded-full bg-foreground text-background">
+                <Sparkles class="size-3.5" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="whitespace-pre-wrap text-[15px] leading-7">
+                  {{ m.content }}
+                  <span
+                    v-if="streaming && m.id === streamingMsg?.id"
+                    class="ml-0.5 inline-block h-4 w-1.5 animate-pulse rounded bg-foreground align-middle"
+                  />
+                </p>
+                <p class="mt-1.5 text-xs text-muted-foreground/60">{{ formatRelative(m.created_at) }}</p>
+              </div>
+            </div>
+          </template>
+        </div>
       </div>
     </div>
 
     <!-- 输入区 -->
-    <div class="border-t bg-background px-4 py-3">
-      <div class="mx-auto flex max-w-3xl items-end gap-2">
+    <div class="shrink-0 border-t bg-background px-4 pb-4 pt-3 sm:px-6">
+      <div class="mx-auto flex w-full max-w-3xl items-end gap-2">
         <Textarea
           v-model="input"
           :rows="1"
-          class="max-h-32 min-h-10 flex-1 resize-none rounded-xl"
-          placeholder="和 AI 聊聊你的点子…（Enter 发送，Shift+Enter 换行）"
+          class="max-h-32 min-h-11 flex-1 resize-none rounded-2xl"
+          placeholder="和 AI 聊聊你的点子…"
           :disabled="sending"
           @keydown.enter.exact.prevent="send"
         />
         <Button
           v-if="streaming"
           variant="secondary"
-          class="h-10 gap-1.5"
+          class="h-11 gap-1.5"
           @click="stop"
         >
           <Square class="size-4" />
@@ -242,7 +243,7 @@ onBeforeUnmount(() => controller.value?.abort())
         </Button>
         <Button
           v-else
-          class="h-10 gap-1.5 px-4"
+          class="h-11 gap-1.5 px-5"
           :disabled="!input.trim() || sending"
           @click="send"
         >
@@ -250,6 +251,9 @@ onBeforeUnmount(() => controller.value?.abort())
           发送
         </Button>
       </div>
+      <p class="mx-auto mt-2 w-full max-w-3xl text-center text-[11px] text-muted-foreground/60">
+        Enter 发送 · Shift+Enter 换行
+      </p>
     </div>
   </div>
 </template>

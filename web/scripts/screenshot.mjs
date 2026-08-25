@@ -50,6 +50,12 @@ await p3.screenshot({ path: `${outDir}/novel-admin-light.png` })
 await p3.goto(`${BASE}/admin/ideas`, { waitUntil: 'networkidle' })
 await p3.waitForTimeout(800)
 await p3.screenshot({ path: `${outDir}/ideas-light.png` })
+await p3.goto(`${BASE}/admin/ideas/1/chat`, { waitUntil: 'networkidle' })
+await p3.waitForTimeout(1200)
+await p3.screenshot({ path: `${outDir}/idea-chat-light.png` })
+await p3.goto(`${BASE}/admin/novels`, { waitUntil: 'networkidle' })
+await p3.waitForTimeout(800)
+await p3.screenshot({ path: `${outDir}/novels-list-light.png` })
 await ctxAdmin.close()
 
 // ---- 后台（暗色） ----

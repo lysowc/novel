@@ -217,6 +217,7 @@ export interface Dashboard {
 }
 
 export interface HomeData {
+  site_name?: string
   recent_updates: Novel[]
   categories: { id: number; name: string; novel_count: number }[]
 }

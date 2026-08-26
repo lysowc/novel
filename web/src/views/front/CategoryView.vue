@@ -1,7 +1,7 @@
 <script setup lang="ts">import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import FrontNav from '@/components/front/FrontNav.vue'
 import FrontFooter from '@/components/front/FrontFooter.vue'
@@ -20,10 +20,18 @@ const categories = ref<{ id: number; name: string; novel_count: number }[]>([])
 const keyword = ref('')
 
 const categoryId = () => Number(route.params.id || 0)
-const categoryName = () =>
+const categoryLabel = () =>
   categoryId() === 0
-    ? '全部小说'
+    ? '全部'
     : (categories.value.find((c) => c.id === categoryId())?.name ?? '分类')
+
+const pageTitle = computed(() =>
+  keyword.value.trim() ? `搜索「${keyword.value.trim()}」` : categoryId() === 0 ? '全部小说' : categoryLabel(),
+)
+const pageSubtitle = computed(() => {
+  const base = categoryLabel()
+  return keyword.value.trim() ? `在「${base}」中找到 ${novels.value.total} 本` : `共 ${novels.value.total} 本小说`
+})
 
 async function load() {
   loading.value = true
@@ -44,16 +52,27 @@ function onSearch() {
   load()
 }
 
+function clearKeyword() {
+  keyword.value = ''
+  novels.value.page = 1
+  load()
+}
+
 onMounted(async () => {
+  const kw = typeof route.query.keyword === 'string' ? route.query.keyword : ''
+  keyword.value = kw
   categories.value = (await fetchCategories()).list
   await load()
 })
 
-watch(() => route.params.id, () => {
-  novels.value.page = 1
-  keyword.value = ''
-  load()
-})
+watch(
+  () => [route.params.id, route.query.keyword] as const,
+  ([, kw]) => {
+    novels.value.page = 1
+    keyword.value = typeof kw === 'string' ? kw : ''
+    load()
+  },
+)
 </script>
 
 <template>
@@ -62,13 +81,24 @@ watch(() => route.params.id, () => {
     <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
       <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 class="text-2xl font-bold">{{ categoryName() }}</h1>
-          <p class="mt-1 text-sm text-muted-foreground">共 {{ novels.total }} 本小说</p>
+          <h1 class="text-2xl font-bold">{{ pageTitle }}</h1>
+          <p class="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+            {{ pageSubtitle }}
+            <Button
+              v-if="keyword"
+              variant="ghost"
+              size="sm"
+              class="h-6 px-2 text-xs"
+              @click="clearKeyword"
+            >
+              清除搜索
+            </Button>
+          </p>
         </div>
         <div class="flex w-full max-w-xs items-center gap-2">
           <Input
             v-model="keyword"
-            placeholder="搜索书名 / 标签"
+            placeholder="搜索书名 / 简介"
             class="h-9"
             @keyup.enter="onSearch"
           />

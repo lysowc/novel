@@ -48,7 +48,7 @@ class AiService
         $result = (new AiClient())->chat([
             ['role' => 'system', 'content' => $system],
             ['role' => 'user', 'content' => '请根据以上要求，输出完整的小说设定。'],
-        ], ['task_type' => 'generate_setting']);
+        ], ['task_type' => 'generate_setting', 'max_tokens' => 8192]);
 
         $sections = self::parseSections($result['text']);
         $fieldMap = [
@@ -94,7 +94,11 @@ class AiService
         $result = (new AiClient())->chat([
             ['role' => 'system', 'content' => $system],
             ['role' => 'user', 'content' => "【小说设定】\n" . ContextBuilder::settingText($novel)],
-        ], ['task_type' => 'generate_outline', 'timeout' => (int)SystemConfig::get('ai_http_timeout', 120) * 3]);
+        ], [
+            'task_type' => 'generate_outline',
+            'max_tokens' => 16384,
+            'timeout' => (int)SystemConfig::get('ai_http_timeout', 120) * 3,
+        ]);
 
         $data = self::extractJson($result['text']);
         if (!isset($data['volumes']) || !is_array($data['volumes'])) {
@@ -144,6 +148,8 @@ class AiService
 
         $targetWords = (int)($params['target_words'] ?? SystemConfig::get('chapter_target_words', 3000));
         $instruction = trim((string)($params['instruction'] ?? ''));
+        // 输出上限：目标字数 × 2（中文约 1 token ≈ 0.5~1 字），防止被 Provider 默认上限静默截断
+        $maxTokens = max(1024, min(16384, $targetWords * 2));
 
         // 1. 生成正文（流式）
         $onStage && $onStage('content', "开始生成第{$chapterNo}章（目标 {$targetWords} 字）...");
@@ -156,7 +162,7 @@ class AiService
                 ['role' => 'system', 'content' => $system],
                 ['role' => 'user', 'content' => $userContext],
             ],
-            ['task_type' => $type],
+            ['task_type' => $type, 'max_tokens' => $maxTokens],
             $onDelta
         );
         $content = trim($result['text']);

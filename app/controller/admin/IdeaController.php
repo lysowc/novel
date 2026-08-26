@@ -126,10 +126,34 @@ class IdeaController
 
         // 组装消息历史
         $history = IdeaChat::where('idea_id', $id)->orderBy('id')->get();
-        $messages = [];
-        foreach ($history as $chat) {
-            $messages[] = ['role' => $chat->role, 'content' => $chat->content];
+        $all = $history->map(fn (IdeaChat $chat) => ['role' => $chat->role, 'content' => $chat->content])->values();
+
+        // 上下文压缩：≤22 条全带；否则保留最早 2 条（种子话题）+ 最近 20 条；
+        // 再按总字符量（3 万字）从尾部倒序兜底截断，防止顶穿模型上下文窗口
+        if ($all->count() <= 22) {
+            $messages = $all->toArray();
+        } else {
+            $messages = array_merge($all->slice(0, 2)->values()->toArray(), $all->slice(-20)->values()->toArray());
         }
+        $total = 0;
+        $trimmed = [];
+        foreach (array_reverse($messages) as $m) {
+            $len = mb_strlen($m['content']);
+            if ($total + $len > 30000 && $trimmed !== []) {
+                break;
+            }
+            $trimmed[] = $m;
+            $total += $len;
+        }
+        $messages = array_reverse($trimmed);
+        $omitted = $all->count() - count($messages);
+        if ($omitted > 0) {
+            array_unshift($messages, [
+                'role' => 'system',
+                'content' => "（注意：更早的 {$omitted} 条讨论记录因长度限制已省略，请基于现有上下文继续讨论，必要时先向作者确认此前确定的关键设定。）",
+            ]);
+        }
+
         // 附上点子背景，帮助 AI 保持讨论上下文
         $category = $idea->category ? $idea->category->name : '';
         $background = "这是关于一部小说的点子讨论。";
@@ -181,6 +205,12 @@ class IdeaController
             return fail('还没有聊天内容');
         }
         $transcript = $chats->map(fn (IdeaChat $chat) => ($chat->role === 'user' ? '作者：' : 'AI：') . $chat->content)->implode("\n");
+        // 提炼时兜底截断：头 3000 字 + 尾 12000 字
+        if (mb_strlen($transcript) > 15000) {
+            $transcript = mb_substr($transcript, 0, 3000)
+                . "\n……（中间讨论省略）……\n"
+                . mb_substr($transcript, -12000);
+        }
 
         try {
             $system = "你是一位网文策划编辑。请根据下面的讨论记录，提炼出小说点子。\n"

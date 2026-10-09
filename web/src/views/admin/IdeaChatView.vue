@@ -8,7 +8,8 @@ import {
 } from '@lucide/vue'
 import { toast } from 'vue-sonner'
 import {
-  createNovelFromIdea, fetchIdeas, fetchIdeaMessages, saveIdea, streamIdeaChat,
+  createNovelFromIdea, fetchIdeas, fetchIdeaMessages, fetchModels, fetchProviders,
+  saveIdea, streamIdeaChat,
 } from '@/api'
 import { formatRelative } from '@/lib/format'
 import type { Idea, IdeaMessage } from '@/types/api'
@@ -29,6 +30,8 @@ const controller = ref<AbortController | null>(null)
 
 const streamingText = ref('')
 const streamingMsg = ref<IdeaMessage | null>(null)
+const chatError = ref('')
+const noProvider = ref(false)
 
 async function loadIdea() {
   loading.value = true
@@ -37,9 +40,21 @@ async function loadIdea() {
     const res = await fetchIdeas({ page: 1, page_size: 100 })
     idea.value = res.list.find((i) => i.id === Number(ideaId.value)) ?? null
     messages.value = await fetchIdeaMessages(ideaId.value)
+    await checkAiAvailability()
   } finally {
     loading.value = false
     await scrollToBottom()
+  }
+}
+
+/** 检查是否有可用的 Provider + Model，没有则给出常驻提示 */
+async function checkAiAvailability() {
+  try {
+    const [providers, models] = await Promise.all([fetchProviders(), fetchModels()])
+    noProvider.value = !providers.some((p) => Number(p.status) === 1)
+      || !models.some((m) => Number(m.status) === 1)
+  } catch {
+    noProvider.value = false
   }
 }
 
@@ -54,6 +69,7 @@ async function send() {
   if (!text || sending.value) return
   input.value = ''
   sending.value = true
+  chatError.value = ''
 
   // 立即追加用户消息
   messages.value.push({
@@ -91,6 +107,7 @@ async function send() {
         onDone: async () => {
           streaming.value = false
           controller.value = null
+          chatError.value = ''
           // 结束后刷新正式消息列表
           messages.value = await fetchIdeaMessages(ideaId.value)
           await scrollToBottom()
@@ -101,6 +118,7 @@ async function send() {
           if (streamingMsg.value && !streamingMsg.value.content) {
             messages.value = messages.value.filter((m) => m.id !== streamingMsg.value!.id)
           }
+          chatError.value = msg
           toast.error(msg)
         },
       },
@@ -176,6 +194,14 @@ onBeforeUnmount(() => controller.value?.abort())
       </div>
     </header>
 
+    <!-- 未启用 AI 的常驻提示 -->
+    <div
+      v-if="noProvider"
+      class="shrink-0 border-b bg-destructive/10 px-4 py-2 text-center text-xs text-destructive"
+    >
+      当前没有可用的 AI Provider/Model，聊天无法回复——请先到「AI 配置」里启用（或添加）后使用
+    </div>
+
     <!-- 消息区（与页面同底色，无边界感） -->
     <div ref="scrollRef" class="min-h-0 flex-1 overflow-y-auto">
       <div v-if="loading" class="flex h-full items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -223,6 +249,14 @@ onBeforeUnmount(() => controller.value?.abort())
 
     <!-- 输入区 -->
     <div class="shrink-0 border-t bg-background px-4 pb-4 pt-3 sm:px-6">
+      <!-- 发送失败的内联错误提示（比 toast 更醒目、常驻） -->
+      <div
+        v-if="chatError"
+        class="mx-auto mb-2 flex w-full max-w-3xl items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+      >
+        <span class="mt-0.5 font-medium">发送失败：</span>
+        <span class="flex-1">{{ chatError }}</span>
+      </div>
       <div class="mx-auto flex w-full max-w-3xl items-end gap-2">
         <Textarea
           v-model="input"

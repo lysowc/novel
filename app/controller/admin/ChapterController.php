@@ -8,6 +8,26 @@ use support\Request;
 
 class ChapterController
 {
+    public function show(Request $request, int $id)
+    {
+        $chapter = Chapter::find($id);
+        if (!$chapter) {
+            return fail('章节不存在');
+        }
+        return ok([
+            'id' => $chapter->id,
+            'novel_id' => $chapter->novel_id,
+            'chapter_no' => $chapter->chapter_no,
+            'title' => $chapter->title,
+            'summary' => $chapter->summary,
+            'content' => $chapter->content,
+            'word_count' => $chapter->word_count,
+            'status' => $chapter->status,
+            'created_at' => $chapter->created_at,
+            'updated_at' => $chapter->updated_at,
+        ]);
+    }
+
     public function update(Request $request, int $id)
     {
         $chapter = Chapter::find($id);

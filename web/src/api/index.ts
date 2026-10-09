@@ -129,6 +129,10 @@ export function fetchAdminChapters(id: number | string) {
   return http.get<Chapter[]>(`/admin/novels/${id}/chapters`)
 }
 
+export function fetchChapter(id: number | string) {
+  return http.get<Chapter>(`/admin/chapters/${id}`)
+}
+
 export function createChapter(id: number | string, body: { title: string; content: string; summary?: string }) {
   if (USE_MOCK) return mockApi.createChapter(Number(id), body)
   return http.post<Chapter>(`/admin/novels/${id}/chapters`, body)

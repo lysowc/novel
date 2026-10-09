@@ -13,7 +13,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import StreamDialog from '@/components/common/StreamDialog.vue'
 import {
-  createChapter, deleteChapter, fetchAdminChapters, fetchTasks, updateChapter,
+  createChapter, deleteChapter, fetchAdminChapters, fetchChapter, fetchTasks, updateChapter,
 } from '@/api'
 import { countWords, formatNumber, formatRelative } from '@/lib/format'
 import type { AiTask, Chapter } from '@/types/api'
@@ -78,15 +78,25 @@ function openCreate() {
   editOpen.value = true
 }
 
-function openEdit(c: Chapter) {
-  editing.value = c
-  chapterForm.value = { title: c.title, content: c.content, summary: c.summary || '' }
-  editOpen.value = true
+async function openEdit(c: Chapter) {
+  try {
+    const full = await fetchChapter(c.id)
+    editing.value = full
+    chapterForm.value = { title: full.title, content: full.content, summary: full.summary || '' }
+    editOpen.value = true
+  } catch {
+    // 请求层已提示
+  }
 }
 
-function openView(c: Chapter) {
+async function openView(c: Chapter) {
   viewing.value = c
   viewOpen.value = true
+  try {
+    viewing.value = await fetchChapter(c.id)
+  } catch {
+    // 请求层已提示
+  }
 }
 
 async function saveChapter() {

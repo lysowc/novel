@@ -63,6 +63,7 @@ Route::group('/api/admin', function () {
     Route::get('/novels/{id}/consistency', [ConsistencyController::class, 'index']);
     Route::post('/novels/{id}/consistency', [ConsistencyController::class, 'run']);
 
+    Route::get('/chapters/{id}', [ChapterController::class, 'show']);
     Route::put('/chapters/{id}', [ChapterController::class, 'update']);
     Route::delete('/chapters/{id}', [ChapterController::class, 'destroy']);
 

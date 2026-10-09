@@ -1,8 +1,9 @@
 <script setup lang="ts">import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 import { onMounted, ref } from 'vue'
-import { Trash2 } from '@lucide/vue'
+import { FileText, Trash2 } from '@lucide/vue'
 import { toast } from 'vue-sonner'
 import PageHeader from '@/components/common/PageHeader.vue'
 import LoadingState from '@/components/common/LoadingState.vue'
@@ -18,11 +19,20 @@ const logs = ref<PageResult<AiLog>>({ list: [], total: 0, page: 1, page_size: 15
 const clearOpen = ref(false)
 const clearing = ref(false)
 
+// 查看 Prompt
+const promptOpen = ref(false)
+const viewingPrompt = ref('')
+
 const taskTypeLabel: Record<string, string> = {
   generate_setting: '生成设定', generate_outline: '生成大纲', generate_chapter: '生成章节',
   continue_chapter: '续写章节', regenerate_chapter: '重新生成', generate_summary: '生成摘要',
   update_memory: '更新记忆', idea_chat: '点子聊天', idea_save: '点子保存',
   consistency_check: '一致性审校',
+}
+
+function openPrompt(l: AiLog) {
+  viewingPrompt.value = l.prompt || '（该调用未记录 prompt）'
+  promptOpen.value = true
 }
 
 async function load() {
@@ -82,6 +92,7 @@ onMounted(load)
             <TableHead class="text-right">耗时</TableHead>
             <TableHead>状态</TableHead>
             <TableHead>错误信息</TableHead>
+            <TableHead>Prompt</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -107,6 +118,12 @@ onMounted(load)
             <TableCell class="max-w-52">
               <p class="line-clamp-1 text-xs text-destructive" :title="l.error_message">{{ l.error_message || '—' }}</p>
             </TableCell>
+            <TableCell>
+              <Button v-if="l.prompt" variant="ghost" size="icon" class="size-8" title="查看 Prompt" @click="openPrompt(l)">
+                <FileText class="size-4" />
+              </Button>
+              <span v-else class="text-xs text-muted-foreground">—</span>
+            </TableCell>
           </TableRow>
         </TableBody>
       </Table>
@@ -129,5 +146,19 @@ onMounted(load)
       @update:open="(v: boolean) => (clearOpen = v)"
       @confirm="onClear"
     />
+
+    <!-- 查看 Prompt -->
+    <Dialog v-model:open="promptOpen">
+      <DialogContent class="max-h-[85vh] max-w-2xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>System Prompt</DialogTitle>
+          <DialogDescription>本次 AI 调用实际使用的系统提示词</DialogDescription>
+        </DialogHeader>
+        <pre class="whitespace-pre-wrap rounded-lg bg-muted/50 p-4 font-mono text-xs leading-relaxed">{{ viewingPrompt }}</pre>
+        <DialogFooter>
+          <Button variant="outline" @click="promptOpen = false">关闭</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

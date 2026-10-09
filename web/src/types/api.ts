@@ -165,6 +165,7 @@ export interface AiLog {
   provider: string
   model: string
   task_type: string
+  prompt: string
   prompt_tokens: number
   completion_tokens: number
   total_tokens: number

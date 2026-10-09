@@ -214,3 +214,9 @@
 .fade-up {
   animation: fade-up 0.4s ease both;
 }
+
+/* 文字选中高亮：黑色（跟随主题，深色模式下自动反转为白色） */
+::selection {
+  background-color: var(--foreground);
+  color: var(--background);
+}

@@ -5,6 +5,8 @@ import { onMounted } from 'vue'
 
 const props = withDefaults(defineProps<{ siteName?: string }>(), { siteName: '' })
 
+const year = new Date().getFullYear()
+
 const site = useSiteStore()
 onMounted(() => site.load())
 </script>
@@ -19,6 +21,17 @@ onMounted(() => site.load())
       <p class="text-xs text-muted-foreground/70">
         个人 AI 小说创作系统 · 灵感始于想法，成篇于坚持
       </p>
+      <div class="flex flex-col items-center gap-1.5 sm:flex-row sm:gap-3">
+        <span class="text-xs text-muted-foreground/70">© {{ year }} {{ props.siteName || site.name }}</span>
+        <a
+          href="https://beian.miit.gov.cn/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-xs text-muted-foreground/70 transition-colors hover:text-muted-foreground"
+        >
+          陕ICP备20009654号-4
+        </a>
+      </div>
     </div>
   </footer>
 </template>

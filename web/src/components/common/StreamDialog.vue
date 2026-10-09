@@ -15,8 +15,10 @@ const props = withDefaults(
     params?: Record<string, unknown>
     /** stream: 流式渲染正文；poll: 仅轮询状态 */
     mode?: 'stream' | 'poll'
+    /** 传入时订阅已存在的任务（不创建），用于"查看进行中的任务" */
+    attachTaskId?: number
   }>(),
-  { title: 'AI 创作', params: undefined, mode: 'stream' },
+  { title: 'AI 创作', params: undefined, mode: 'stream', attachTaskId: undefined },
 )
 
 const emit = defineEmits<{
@@ -63,11 +65,14 @@ async function start() {
   phase.value = 'running'
   controller.value = new AbortController()
   try {
-    const task = await createAiTask({
-      task_type: props.taskType,
-      novel_id: props.novelId,
-      params: props.params,
-    })
+    // attach 模式：订阅已存在的任务；否则创建新任务
+    const task = props.attachTaskId
+      ? await fetchTask(props.attachTaskId)
+      : await createAiTask({
+          task_type: props.taskType,
+          novel_id: props.novelId,
+          params: props.params,
+        })
     taskId.value = task.id
 
     if (props.mode === 'poll') {

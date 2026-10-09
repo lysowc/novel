@@ -151,6 +151,7 @@ export type TaskType =
 export interface AiTask {
   id: number
   task_type: TaskType
+  task_type_text?: string
   ref_id: number
   ref_type?: string
   status: TaskStatus

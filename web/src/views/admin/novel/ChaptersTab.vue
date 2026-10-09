@@ -6,17 +6,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button'
 
 import { computed, onMounted, ref } from 'vue'
-import { FilePlus2, LoaderCircle, Pencil, Plus, RefreshCw, Sparkles, Trash2, Wand2 } from '@lucide/vue'
+import { Eye, FilePlus2, LoaderCircle, Pencil, Plus, RefreshCw, Sparkles, Trash2, Wand2 } from '@lucide/vue'
 import { toast } from 'vue-sonner'
 import LoadingState from '@/components/common/LoadingState.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import StreamDialog from '@/components/common/StreamDialog.vue'
 import {
-  createChapter, deleteChapter, fetchAdminChapters, updateChapter,
+  createChapter, deleteChapter, fetchAdminChapters, fetchTasks, updateChapter,
 } from '@/api'
 import { countWords, formatNumber, formatRelative } from '@/lib/format'
-import type { Chapter } from '@/types/api'
+import type { AiTask, Chapter } from '@/types/api'
 
 const props = defineProps<{ novelId: number }>()
 
@@ -35,8 +35,19 @@ const deleteLoading = ref(false)
 
 // AI 流式任务
 const aiOpen = ref(false)
-const aiTask = ref<{ type: 'generate_chapter' | 'continue_chapter' | 'regenerate_chapter' | 'generate_summary'; no?: number; mode: 'stream' | 'poll' } | null>(null)
+const aiTask = ref<{ type: 'generate_chapter' | 'continue_chapter' | 'regenerate_chapter' | 'generate_summary'; no?: number; mode: 'stream' | 'poll'; remaining?: number } | null>(null)
 const aiTitle = ref('')
+
+// 连续续写
+const batchCount = ref(5)
+
+// 查看章节内容（只读）
+const viewOpen = ref(false)
+const viewing = ref<Chapter | null>(null)
+
+// 进行中的任务（查看进度）
+const runningTask = ref<AiTask | null>(null)
+const progressOpen = ref(false)
 
 const latestNo = computed(() =>
   chapters.value.length ? Math.max(...chapters.value.map((c) => c.chapter_no)) : 0,
@@ -46,8 +57,18 @@ async function load() {
   loading.value = true
   try {
     chapters.value = await fetchAdminChapters(props.novelId)
+    await loadRunningTask()
   } finally {
     loading.value = false
+  }
+}
+
+async function loadRunningTask() {
+  try {
+    const res = await fetchTasks({ novel_id: props.novelId, page_size: 20 })
+    runningTask.value = res.list.find((t) => t.status === 'pending' || t.status === 'running') ?? null
+  } catch {
+    runningTask.value = null
   }
 }
 
@@ -61,6 +82,11 @@ function openEdit(c: Chapter) {
   editing.value = c
   chapterForm.value = { title: c.title, content: c.content, summary: c.summary || '' }
   editOpen.value = true
+}
+
+function openView(c: Chapter) {
+  viewing.value = c
+  viewOpen.value = true
 }
 
 async function saveChapter() {
@@ -129,7 +155,24 @@ function aiParams() {
   if (aiTask.value?.no) p.chapter_no = aiTask.value.no
   if (aiTask.value?.type === 'generate_chapter') p.target_words = 3000
   if (aiTask.value?.type === 'continue_chapter') p.target_words = 3000
+  if (aiTask.value?.remaining) p.remaining = aiTask.value.remaining
   return p
+}
+
+/** 连续续写 N 章（首章流式展示，后续自动排队） */
+function startBatch() {
+  if (chapters.value.length === 0) {
+    toast.error('还没有章节，请先创建或生成第一章')
+    return
+  }
+  const n = Math.max(1, batchCount.value)
+  aiTask.value = { type: 'continue_chapter', mode: 'stream', remaining: n - 1 }
+  aiTitle.value = `连续续写 · 共 ${n} 章`
+  aiOpen.value = true
+}
+
+function openProgress() {
+  progressOpen.value = true
 }
 
 onMounted(load)
@@ -140,11 +183,25 @@ onMounted(load)
     <!-- 操作栏 -->
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
       <p class="text-sm text-muted-foreground">共 {{ chapters.length }} 章</p>
-      <div class="flex flex-wrap gap-2">
+      <div class="flex flex-wrap items-center gap-2">
         <Button class="gap-2" :disabled="chapters.length === 0" @click="startAi('continue_chapter')">
           <Wand2 class="size-4" />
           AI 续写
         </Button>
+        <div v-if="chapters.length > 0" class="flex items-center gap-1.5">
+          <select
+            v-model.number="batchCount"
+            class="h-9 rounded-lg border bg-background px-2 text-sm text-muted-foreground"
+          >
+            <option :value="3">3 章</option>
+            <option :value="5">5 章</option>
+            <option :value="10">10 章</option>
+          </select>
+          <Button variant="secondary" class="gap-2" @click="startBatch">
+            <Sparkles class="size-4" />
+            连续续写
+          </Button>
+        </div>
         <Button variant="outline" class="gap-2" @click="startAi('generate_chapter')">
           <Sparkles class="size-4" />
           AI 生成新章节
@@ -154,6 +211,22 @@ onMounted(load)
           新增章节
         </Button>
       </div>
+    </div>
+
+    <!-- 进行中任务横幅 -->
+    <div
+      v-if="runningTask"
+      class="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-2.5"
+    >
+      <LoaderCircle class="size-4 animate-spin text-primary" />
+      <p class="min-w-0 flex-1 text-sm">
+        有任务进行中：<span class="font-medium">{{ runningTask.task_type_text || runningTask.task_type }}</span>
+        <span class="text-muted-foreground">（任务 #{{ runningTask.id }}）</span>
+      </p>
+      <Button size="sm" variant="outline" class="gap-1.5" @click="openProgress">
+        <Eye class="size-3.5" />
+        查看进度
+      </Button>
     </div>
 
     <LoadingState v-if="loading" variant="table" :rows="5" />
@@ -197,6 +270,9 @@ onMounted(load)
             <TableCell class="hidden lg:table-cell text-xs text-muted-foreground">{{ formatRelative(c.updated_at) }}</TableCell>
             <TableCell class="text-right">
               <div class="flex justify-end gap-1 lg:opacity-0 lg:transition-opacity lg:group-hover:opacity-100">
+                <Button variant="ghost" size="icon" class="size-8" title="查看内容" @click="openView(c)">
+                  <Eye class="size-4" />
+                </Button>
                 <Button variant="ghost" size="icon" class="size-8" title="编辑" @click="openEdit(c)">
                   <Pencil class="size-4" />
                 </Button>
@@ -252,6 +328,22 @@ onMounted(load)
       </DialogContent>
     </Dialog>
 
+    <!-- 查看章节内容（只读） -->
+    <Dialog v-model:open="viewOpen">
+      <DialogContent class="max-h-[85vh] max-w-2xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>第 {{ viewing?.chapter_no }} 章 {{ viewing?.title }}</DialogTitle>
+          <DialogDescription v-if="viewing?.summary">摘要：{{ viewing.summary }}</DialogDescription>
+        </DialogHeader>
+        <div class="py-2">
+          <p class="whitespace-pre-wrap font-serif text-[15px] leading-8">{{ viewing?.content }}</p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" @click="viewOpen = false">关闭</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
     <!-- 删除确认 -->
     <ConfirmDialog
       :open="!!deleting"
@@ -274,6 +366,19 @@ onMounted(load)
       :mode="aiTask.mode"
       @done="() => { toast.success('AI 任务完成'); load() }"
       @update:open="(v: boolean) => { if (!v) { aiTask = null } }"
+    />
+
+    <!-- 查看进行中任务进度（订阅已有任务，不新建） -->
+    <StreamDialog
+      v-if="runningTask"
+      v-model:open="progressOpen"
+      :title="`查看进度 · 任务 #${runningTask.id}`"
+      :task-type="runningTask.task_type"
+      :novel-id="novelId"
+      mode="stream"
+      :attach-task-id="runningTask.id"
+      @done="load"
+      @update:open="(v: boolean) => { if (!v) load() }"
     />
   </div>
 </template>

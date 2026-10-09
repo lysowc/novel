@@ -102,29 +102,28 @@ class AiTaskController
 
         $startedAt = microtime(true);
         $lastEventAt = $startedAt;
+        $cursor = 0;
         while (true) {
             // 客户端断开
             if ($connection->getStatus() === TcpConnection::STATUS_CLOSED) {
                 break;
             }
 
-            // 取缓冲事件
+            // 取缓冲事件：lrange + 游标（不消费），断开重连可回放已生成的全部内容
             $events = [];
             try {
                 $redis = RedisClient::connect();
-                while (($raw = $redis->rpop(AiTaskService::STREAM_PREFIX . $id)) !== null) {
-                    $events[] = json_decode($raw, true);
-                    if (count($events) >= 300) {
-                        break;
-                    }
-                }
+                $list = $redis->lrange(AiTaskService::STREAM_PREFIX . $id, 0, -1);
                 $redis->disconnect();
+                $events = is_array($list) ? array_reverse($list) : []; // lpush 头插，反转成时间正序
             } catch (\Throwable) {
                 // 连接失败下轮重试
             }
 
             $done = false;
-            foreach ($events as $event) {
+            $total = count($events);
+            for ($i = $cursor; $i < $total; $i++) {
+                $event = json_decode($events[$i], true);
                 if (!is_array($event)) {
                     continue;
                 }
@@ -132,8 +131,10 @@ class AiTaskController
                 $lastEventAt = microtime(true);
                 if (($event['type'] ?? '') === 'done') {
                     $done = true;
+                    break;
                 }
             }
+            $cursor = $total;
             if ($done) {
                 break;
             }

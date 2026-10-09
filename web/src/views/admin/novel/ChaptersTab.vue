@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { Eye, FilePlus2, LoaderCircle, Pencil, Plus, RefreshCw, Sparkles, Trash2, Wand2 } from '@lucide/vue'
 import { toast } from 'vue-sonner'
 import LoadingState from '@/components/common/LoadingState.vue'
@@ -69,6 +69,19 @@ async function loadRunningTask() {
     runningTask.value = res.list.find((t) => t.status === 'pending' || t.status === 'running') ?? null
   } catch {
     runningTask.value = null
+  }
+}
+
+// 轮询进行中任务，让横幅随任务开始/结束自动出现、消失
+let pollTimer: ReturnType<typeof setInterval> | null = null
+function startPolling() {
+  stopPolling()
+  pollTimer = setInterval(loadRunningTask, 3000)
+}
+function stopPolling() {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
   }
 }
 
@@ -185,7 +198,11 @@ function openProgress() {
   progressOpen.value = true
 }
 
-onMounted(load)
+onMounted(() => {
+  load()
+  startPolling()
+})
+onBeforeUnmount(stopPolling)
 </script>
 
 <template>
@@ -375,7 +392,7 @@ onMounted(load)
       :params="aiParams()"
       :mode="aiTask.mode"
       @done="() => { toast.success('AI 任务完成'); load() }"
-      @update:open="(v: boolean) => { if (!v) { aiTask = null } }"
+      @update:open="(v: boolean) => { if (!v) { aiTask = null; loadRunningTask() } }"
     />
 
     <!-- 查看进行中任务进度（订阅已有任务，不新建） -->

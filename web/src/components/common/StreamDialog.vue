@@ -195,7 +195,7 @@ watch(
       <div class="min-h-0 flex-1 overflow-y-auto px-6 py-5" ref="contentRef" @scroll.passive="onScroll">
         <div v-if="phase === 'idle' || (phase === 'running' && !output && mode === 'stream')" class="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
           <LoaderCircle class="size-8 animate-spin text-primary" />
-          <p class="text-sm">正在创建任务并连接 AI…</p>
+          <p class="text-sm">{{ props.attachTaskId ? '正在连接任务…' : '正在创建任务并连接 AI…' }}</p>
         </div>
         <p
           v-else-if="output"

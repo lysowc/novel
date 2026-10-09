@@ -335,7 +335,7 @@ onMounted(async () => {
               <p class="text-sm font-medium">公开可见</p>
               <p class="text-xs text-muted-foreground">关闭后仅后台可见</p>
             </div>
-            <Switch v-model:checked="form.is_public" />
+            <Switch :checked="!!form.is_public" @update:checked="(v: boolean) => (form.is_public = v ? 1 : 0)" />
           </div>
         </div>
         <DialogFooter>

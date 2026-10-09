@@ -35,7 +35,8 @@ const taskStatusMap: Record<TaskStatus, { label: string; cls: string; icon: type
 const taskTypeLabel: Record<string, string> = {
   generate_setting: '生成设定', generate_outline: '生成大纲', generate_chapter: '生成章节',
   continue_chapter: '续写章节', regenerate_chapter: '重新生成', generate_summary: '生成摘要',
-  update_memory: '更新记忆',
+  update_memory: '更新记忆', idea_chat: '点子聊天', idea_save: '点子保存',
+  consistency_check: '一致性审校',
 }
 
 onMounted(async () => {
@@ -117,7 +118,7 @@ onMounted(async () => {
             <li v-for="l in data.recent_logs" :key="l.id" class="flex items-center gap-3 px-5 py-3">
               <span
                 class="size-2 shrink-0 rounded-full"
-                :class="l.status === 1 ? 'bg-foreground' : 'bg-destructive'"
+                :class="l.status === 'success' ? 'bg-foreground' : 'bg-destructive'"
               />
               <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-medium">

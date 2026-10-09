@@ -21,7 +21,8 @@ const clearing = ref(false)
 const taskTypeLabel: Record<string, string> = {
   generate_setting: '生成设定', generate_outline: '生成大纲', generate_chapter: '生成章节',
   continue_chapter: '续写章节', regenerate_chapter: '重新生成', generate_summary: '生成摘要',
-  update_memory: '更新记忆', idea_chat: '点子聊天',
+  update_memory: '更新记忆', idea_chat: '点子聊天', idea_save: '点子保存',
+  consistency_check: '一致性审校',
 }
 
 async function load() {
@@ -98,9 +99,9 @@ onMounted(load)
             <TableCell>
               <span
                 class="rounded-full px-2 py-0.5 text-[11px] font-medium"
-                :class="l.status === 1 ? 'bg-foreground/10 text-foreground' : 'bg-destructive/10 text-destructive'"
+                :class="l.status === 'success' ? 'bg-foreground/10 text-foreground' : 'bg-destructive/10 text-destructive'"
               >
-                {{ l.status === 1 ? '成功' : '失败' }}
+                {{ l.status === 'success' ? '成功' : '失败' }}
               </span>
             </TableCell>
             <TableCell class="max-w-52">

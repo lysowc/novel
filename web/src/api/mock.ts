@@ -429,10 +429,10 @@ const tasks: AiTask[] = [
 ]
 
 const logs: AiLog[] = [
-  { id: 1, provider: 'DeepSeek', model: 'deepseek-chat', task_type: 'generate_chapter', prompt_tokens: 3200, completion_tokens: 4100, total_tokens: 7300, duration: 82340, status: 1, error_message: '', created_at: daysAgo(0, 3) },
-  { id: 2, provider: 'DeepSeek', model: 'deepseek-chat', task_type: 'continue_chapter', prompt_tokens: 2800, completion_tokens: 3560, total_tokens: 6360, duration: 65420, status: 0, error_message: '上游模型超时，请重试', created_at: daysAgo(0, 1) },
-  { id: 3, provider: 'OpenAI', model: 'gpt-4o-mini', task_type: 'generate_summary', prompt_tokens: 900, completion_tokens: 120, total_tokens: 1020, duration: 5210, status: 1, error_message: '', created_at: daysAgo(1, 6) },
-  { id: 4, provider: 'DeepSeek', model: 'deepseek-reasoner', task_type: 'generate_outline', prompt_tokens: 1800, completion_tokens: 2400, total_tokens: 4200, duration: 124800, status: 1, error_message: '', created_at: daysAgo(2) },
+  { id: 1, provider: 'DeepSeek', model: 'deepseek-chat', task_type: 'generate_chapter', prompt_tokens: 3200, completion_tokens: 4100, total_tokens: 7300, duration: 82340, status: 'success', error_message: '', created_at: daysAgo(0, 3) },
+  { id: 2, provider: 'DeepSeek', model: 'deepseek-chat', task_type: 'continue_chapter', prompt_tokens: 2800, completion_tokens: 3560, total_tokens: 6360, duration: 65420, status: 'failed', error_message: '上游模型超时，请重试', created_at: daysAgo(0, 1) },
+  { id: 3, provider: 'OpenAI', model: 'gpt-4o-mini', task_type: 'generate_summary', prompt_tokens: 900, completion_tokens: 120, total_tokens: 1020, duration: 5210, status: 'success', error_message: '', created_at: daysAgo(1, 6) },
+  { id: 4, provider: 'DeepSeek', model: 'deepseek-reasoner', task_type: 'generate_outline', prompt_tokens: 1800, completion_tokens: 2400, total_tokens: 4200, duration: 124800, status: 'success', error_message: '', created_at: daysAgo(2) },
 ]
 
 const config: SystemConfig = {

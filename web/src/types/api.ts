@@ -168,7 +168,7 @@ export interface AiLog {
   completion_tokens: number
   total_tokens: number
   duration: number // 毫秒
-  status: number
+  status: 'success' | 'failed'
   error_message: string
   created_at: string
 }

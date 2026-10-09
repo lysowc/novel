@@ -19,10 +19,10 @@ import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import StreamDialog from '@/components/common/StreamDialog.vue'
 import CoverArt from '@/components/common/CoverArt.vue'
 import {
-  createNovel, deleteNovel, fetchAdminCategories, fetchAdminNovels, updateNovel,
+  createNovel, deleteNovel, fetchAdminCategories, fetchAdminNovels, fetchTasks, updateNovel,
 } from '@/api'
 import { formatNumber, formatRelative } from '@/lib/format'
-import type { Category, Novel, PageResult, NovelStatus } from '@/types/api'
+import type { AiTask, Category, Novel, PageResult, NovelStatus } from '@/types/api'
 
 const router = useRouter()
 
@@ -55,6 +55,11 @@ const deleteLoading = ref(false)
 // AI 续写
 const aiNovel = ref<Novel | null>(null)
 const streamOpen = ref(false)
+
+// 查看进行中任务进度（回放 + 实时）
+const progressNovel = ref<Novel | null>(null)
+const progressTask = ref<AiTask | null>(null)
+const progressOpen = ref(false)
 
 async function load() {
   loading.value = true
@@ -142,7 +147,21 @@ async function confirmDelete() {
   }
 }
 
-function openAi(n: Novel) {
+async function openAi(n: Novel) {
+  // 该小说已有任务在跑则打开进度回放，而非另起任务报错
+  try {
+    const res = await fetchTasks({ novel_id: n.id, page_size: 20 })
+    const running = res.list.find((t) => t.status === 'pending' || t.status === 'running')
+    if (running) {
+      toast.info('该小说已有任务进行中，为你打开进度查看')
+      progressNovel.value = n
+      progressTask.value = running
+      progressOpen.value = true
+      return
+    }
+  } catch {
+    // 查询失败则按正常流程创建任务
+  }
   aiNovel.value = n
   streamOpen.value = true
 }
@@ -368,6 +387,19 @@ onMounted(async () => {
       :novel-id="aiNovel.id"
       @done="() => { toast.success('AI 创作完成'); load() }"
       @update:open="(v: boolean) => { if (!v) { aiNovel = null } }"
+    />
+
+    <!-- 查看进行中任务进度（订阅已有任务，不新建） -->
+    <StreamDialog
+      v-if="progressTask"
+      v-model:open="progressOpen"
+      :title="`查看进度 · ${progressNovel?.title ?? ''}（任务 #${progressTask.id}）`"
+      :task-type="progressTask.task_type"
+      :novel-id="progressTask.ref_id"
+      mode="stream"
+      :attach-task-id="progressTask.id"
+      @done="load"
+      @update:open="(v: boolean) => { if (!v) { progressTask = null; load() } }"
     />
   </div>
 </template>

@@ -158,7 +158,18 @@ async function confirmDelete() {
   }
 }
 
+/** 若已有任务在跑，则打开进度回放并返回 true（阻止另起任务） */
+function openProgressIfRunning(): boolean {
+  if (runningTask.value) {
+    toast.info('已有任务进行中，为你打开进度查看')
+    progressOpen.value = true
+    return true
+  }
+  return false
+}
+
 function startAi(type: 'generate_chapter' | 'continue_chapter' | 'regenerate_chapter' | 'generate_summary', c?: Chapter) {
+  if (openProgressIfRunning()) return
   const no = c?.chapter_no ?? latestNo.value
   if ((type === 'continue_chapter' || type === 'regenerate_chapter' || type === 'generate_summary') && !no) {
     toast.error('还没有章节，请先创建或生成第一章')
@@ -184,6 +195,7 @@ function aiParams() {
 
 /** 连续续写 N 章（首章流式展示，后续自动排队） */
 function startBatch() {
+  if (openProgressIfRunning()) return
   if (chapters.value.length === 0) {
     toast.error('还没有章节，请先创建或生成第一章')
     return

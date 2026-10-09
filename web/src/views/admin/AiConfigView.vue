@@ -59,7 +59,7 @@ function openProviderCreate() {
 
 function openProviderEdit(p: AiProvider) {
   providerEditing.value = p
-  providerForm.value = { name: p.name, base_url: p.base_url, api_key: '', status: p.status }
+  providerForm.value = { name: p.name, base_url: p.base_url, api_key: '', status: Number(p.status) }
   providerOpen.value = true
 }
 
@@ -87,10 +87,11 @@ async function saveProvider() {
 }
 
 async function toggleProvider(p: AiProvider) {
+  const next = Number(p.status) === 1 ? 0 : 1
   try {
-    await updateProvider(p.id, { status: p.status === 1 ? 0 : 1 })
-    p.status = p.status === 1 ? 0 : 1
-    toast.success(p.status ? '已启用' : '已停用')
+    await updateProvider(p.id, { status: next })
+    p.status = next
+    toast.success(next ? '已启用' : '已停用')
   } catch {
     // 请求层已提示
   }
@@ -120,7 +121,7 @@ function openModelEdit(m: AiModel) {
   modelEditing.value = m
   modelForm.value = {
     provider_id: m.provider_id, name: m.name, display_name: m.display_name,
-    max_tokens: m.max_tokens, temperature: m.temperature, status: m.status,
+    max_tokens: m.max_tokens, temperature: m.temperature, status: Number(m.status),
   }
   modelOpen.value = true
 }
@@ -149,10 +150,11 @@ async function saveModel() {
 }
 
 async function toggleModel(m: AiModel) {
+  const next = Number(m.status) === 1 ? 0 : 1
   try {
-    await updateModel(m.id, { status: m.status === 1 ? 0 : 1 })
-    m.status = m.status === 1 ? 0 : 1
-    toast.success(m.status ? '已启用' : '已停用')
+    await updateModel(m.id, { status: next })
+    m.status = next
+    toast.success(next ? '已启用' : '已停用')
   } catch {
     // 请求层已提示
   }
@@ -274,7 +276,7 @@ onMounted(load)
             <div class="mt-4 flex items-center justify-between border-t pt-3">
               <div class="flex items-center gap-2">
                 <span class="text-[11px] text-muted-foreground">启用</span>
-                <Switch :checked="p.status === 1" @update:checked="toggleProvider(p)" />
+                <Switch :checked="Number(p.status) === 1" @update:checked="toggleProvider(p)" />
               </div>
               <Button
                 v-if="!p.is_default"
@@ -331,7 +333,7 @@ onMounted(load)
                 <TableCell class="hidden md:table-cell">{{ m.max_tokens }}</TableCell>
                 <TableCell class="hidden md:table-cell">{{ m.temperature }}</TableCell>
                 <TableCell>
-                  <Switch :checked="m.status === 1" @update:checked="toggleModel(m)" />
+                  <Switch :checked="Number(m.status) === 1" @update:checked="toggleModel(m)" />
                 </TableCell>
                 <TableCell class="text-right">
                   <div class="flex justify-end gap-1 lg:opacity-0 lg:transition-opacity lg:group-hover:opacity-100">

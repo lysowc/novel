@@ -14,7 +14,10 @@ const pageTitle = computed(() => (route.meta.title as string) || '后台管理')
 </script>
 
 <template>
-  <div class="flex min-h-screen bg-muted/30 dark:bg-background">
+  <div
+    class="flex bg-muted/30 dark:bg-background"
+    :class="route.meta.bare ? 'h-screen overflow-hidden' : 'min-h-screen'"
+  >
     <!-- 桌面侧边栏 -->
     <AdminSidebar class="hidden lg:flex" />
 

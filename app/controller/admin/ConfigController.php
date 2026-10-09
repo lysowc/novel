@@ -16,6 +16,9 @@ class ConfigController
         'chapter_target_words' => '每章目标字数',
         'outline_volumes' => '大纲默认卷数',
         'outline_chapters_per_volume' => '大纲每卷章数',
+        'retrieval_enabled' => '启用相关章节检索',
+        'retrieval_max_chapters' => '每章召回的相关章节数',
+        'consistency_auto_interval' => '自动审校间隔（章）',
     ];
 
     public function index(Request $request)
@@ -58,6 +61,9 @@ class ConfigController
             'chapter_target_words' => '3000',
             'outline_volumes' => '3',
             'outline_chapters_per_volume' => '20',
+            'retrieval_enabled' => '1',
+            'retrieval_max_chapters' => '5',
+            'consistency_auto_interval' => '0',
         ];
         return $defaults[$key] ?? '';
     }

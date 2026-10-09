@@ -22,6 +22,7 @@ class PromptService
             'chapter_continue' => ['{{target_words}} 目标字数'],
             'chapter_summary' => [],
             'memory_update' => [],
+            'consistency_check' => [],
         ];
         return $map[$type] ?? [];
     }

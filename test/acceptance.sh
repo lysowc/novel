@@ -102,10 +102,29 @@ print(len(d), (d[0].get('summary') or '') != '' if d else '')" 2>/dev/null)
   MEM=$(curl -s -b "$COOKIE" "$BASE/api/admin/novels/$NOVEL_ID/memory" | python3 -c "
 import json,sys
 try:
-    c=json.load(sys.stdin)['data']['content']; json.loads(c); print('ok')
+    d=json.loads(json.load(sys.stdin)['data']['content']); print('v2' if d.get('schema')=='v2' else 'json')
 except: print('bad')" 2>/dev/null)
   check "章节含摘要" "$(echo $CH | cut -d' ' -f2)" "True"
-  check "小说记忆为合法 JSON" "$MEM" "ok"
+  check "小说记忆为结构化 v2 JSON" "$MEM" "v2"
+
+  # 一致性审校
+  R=$(curl -s -b "$COOKIE" -X POST "$BASE/api/admin/novels/$NOVEL_ID/consistency")
+  CTASK=$(echo "$R" | python3 -c "import json,sys; print(json.load(sys.stdin).get('data',{}).get('id',''))" 2>/dev/null)
+  [ -n "$CTASK" ] && ok "创建审校任务 #$CTASK" || bad "创建审校任务"
+  for i in $(seq 1 30); do
+    S=$(curl -s -b "$COOKIE" "$BASE/api/admin/ai/tasks/$CTASK" | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['status'])" 2>/dev/null)
+    [ "$S" = "success" ] || [ "$S" = "failed" ] && break
+    sleep 2
+  done
+  check "审校任务完成" "$S" "success"
+  R=$(curl -s -b "$COOKIE" "$BASE/api/admin/novels/$NOVEL_ID/consistency")
+  N_ISSUES=$(echo "$R" | python3 -c "
+import json,sys
+try:
+    lst=json.load(sys.stdin)['data']
+    print(len(lst[0].get('report',{}).get('issues',[])) if lst else -1)
+except: print(-1)" 2>/dev/null)
+  [ "$N_ISSUES" -gt 0 ] 2>/dev/null && ok "审校报告含 $N_ISSUES 个问题" || bad "审校报告读取"
 
   step "6. 前台阅读（发布后）"
   curl -s -b "$COOKIE" -X PUT "$BASE/api/admin/novels/$NOVEL_ID" -H 'Content-Type: application/json' -d '{"status":"published","is_public":1}' > /dev/null

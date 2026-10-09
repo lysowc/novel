@@ -16,6 +16,7 @@ use app\controller\admin\PromptController;
 use app\controller\admin\AiTaskController;
 use app\controller\admin\AiLogController;
 use app\controller\admin\ConfigController;
+use app\controller\admin\ConsistencyController;
 use app\controller\api\HomeController;
 use app\controller\api\FrontNovelController;
 
@@ -58,6 +59,9 @@ Route::group('/api/admin', function () {
     Route::put('/novels/{id}/memory', [NovelController::class, 'memory']);
     Route::get('/novels/{id}/outline', [NovelController::class, 'outline']);
     Route::put('/novels/{id}/outline', [NovelController::class, 'outline']);
+
+    Route::get('/novels/{id}/consistency', [ConsistencyController::class, 'index']);
+    Route::post('/novels/{id}/consistency', [ConsistencyController::class, 'run']);
 
     Route::put('/chapters/{id}', [ChapterController::class, 'update']);
     Route::delete('/chapters/{id}', [ChapterController::class, 'destroy']);

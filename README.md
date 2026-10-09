@@ -12,6 +12,13 @@ AI 点子聊天 → 保存点子 → 创建小说 → AI 生成设定 → AI 生
 
 核心原则：**正文是历史，摘要是索引，小说记忆是当前状态**。续写上下文分层组装（设定 + 记忆 + 摘要 + 最近 N 章正文），不把整本小说塞给 AI。
 
+## 上下文与记忆架构
+
+- **可召回记忆（检索式上下文）**：生成/续写每章前，以"本章大纲目标 + 用户指令 + 小说记忆"为查询，在全部历史章节摘要上做本地 BM25 检索（中文双字 bigram，零外部依赖），召回已被滚动窗口丢弃、但与当前剧情相关的早期章节注入上下文——长篇小说早期的伏笔得以自然回收。配置：`retrieval_enabled` / `retrieval_max_chapters`。
+- **结构化记忆槽（v2）**：小说记忆从自由 JSON 升级为固定记忆槽：`current_state`（地点/时间/剧情进展）、`characters`（人物状态/关系/目标）、`foreshadowing`（伏笔：open/resolved + 埋设/回收章号）、`world_facts`（世界观增量）、`timeline`（关键事件，自动修剪最近 20 条）、`unresolved_events`、`important_items`、`style_notes`。旧格式记忆会在下次 AI 更新时自动迁移；后台「记忆」页提供结构化视图与 JSON 编辑两种模式。
+- **一致性审校环**：新增 `consistency_check` 任务类型，AI 对照大纲、已写章节进度（近 30 章全量 + 更早等距抽样）与记忆，检测剧情偏离 / 前后矛盾 / 伏笔遗忘 / 人物失据 / 时间线冲突，产出分级报告（后台「审校」页）。支持手动触发，也可设置 `consistency_auto_interval` 每 N 章自动审校。
+- 回归自测：`php webman verify:novel-memory`（检索召回 / 记忆规整 / 审校报告 19 项断言，自动造数并清理）。
+
 ## 技术栈
 
 - 后端：PHP 8.5 + Webman 2 + MySQL 8 + Redis + Guzzle（OpenAI 兼容接口）
@@ -72,11 +79,12 @@ php -S 127.0.0.1:8899 test/mock_ai_server.php
 ```
 app/
   controller/api/      前台 API（首页/分类/详情/目录/阅读）
-  controller/admin/    后台 API（需登录）
-  service/             AiClient / AiService / AiTaskService / ContextBuilder / PromptService
-  model/               14 张表的模型
+  controller/admin/    后台 API（需登录，含一致性审校）
+  service/             AiClient / AiService / AiTaskService / ContextBuilder /
+                       RetrievalService（相关章节检索）/ PromptService
+  model/               14 张表的模型（+ 审校报告）
   process/AiWorker.php AI 任务消费进程（Redis 队列）
-  command/             migrate / app:install
+  command/             migrate / app:install / verify:novel-memory
 config/route.php       全部路由 + SPA 兜底
 database/migrations/   SQL 迁移
 web/                   Vue 3 前端

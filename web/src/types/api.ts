@@ -125,6 +125,7 @@ export type PromptType =
   | 'chapter_summary'
   | 'memory_update'
   | 'chapter_continue'
+  | 'consistency_check'
 
 export interface Prompt {
   id: number
@@ -145,6 +146,7 @@ export type TaskType =
   | 'regenerate_chapter'
   | 'generate_summary'
   | 'update_memory'
+  | 'consistency_check'
 
 export interface AiTask {
   id: number
@@ -201,8 +203,77 @@ export interface Outline {
 export interface Memory {
   id: number
   novel_id: number
-  content: string // JSON 字符串
+  content: string // JSON 字符串（v2 结构化记忆槽 / 旧格式兼容）
   updated_at: string
+}
+
+// ============ 结构化记忆 v2 ============
+
+export interface MemoryCurrentState {
+  location: string
+  time: string
+  plot_progress: string
+}
+
+export interface MemoryCharacter {
+  name: string
+  status: string
+  relationships: string
+  goals: string
+}
+
+export interface MemoryForeshadowing {
+  description: string
+  planted_chapter: number
+  status: 'open' | 'resolved'
+  resolved_chapter: number
+}
+
+export interface MemoryTimelineEvent {
+  chapter: number
+  event: string
+}
+
+export interface MemoryItem {
+  name: string
+  status: string
+}
+
+export interface StructuredMemory {
+  schema: 'v2'
+  current_state: MemoryCurrentState
+  characters: MemoryCharacter[]
+  foreshadowing: MemoryForeshadowing[]
+  world_facts: string[]
+  timeline: MemoryTimelineEvent[]
+  unresolved_events: string[]
+  important_items: MemoryItem[]
+  style_notes: string
+}
+
+// ============ 一致性审校 ============
+
+export type ConsistencyStatus = 'ok' | 'warning' | 'critical'
+
+export interface ConsistencyIssue {
+  severity: 'minor' | 'major' | 'critical'
+  type: string
+  description: string
+  suggestion: string
+  related_chapters: number[]
+}
+
+export interface ConsistencyReport {
+  id: number
+  novel_id: number
+  chapter_no: number
+  status: ConsistencyStatus
+  report: {
+    status: ConsistencyStatus
+    summary: string
+    issues: ConsistencyIssue[]
+  }
+  created_at: string
 }
 
 export interface Dashboard {

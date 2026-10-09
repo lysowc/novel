@@ -5,8 +5,9 @@
 // ============================================================
 import type {
   AiLog, AiModel, AiProvider, AiTask, Category, Chapter, ChapterListItem,
-  ChapterRead, Dashboard, HomeData, Idea, IdeaMessage, LoginResult, Memory,
-  Novel, NovelDetail, NovelSetting, PageResult, Prompt, SystemConfig, TaskType,
+  ChapterRead, ConsistencyReport, Dashboard, HomeData, Idea, IdeaMessage,
+  LoginResult, Memory, Novel, NovelDetail, NovelSetting, PageResult, Prompt,
+  SystemConfig, TaskType,
 } from '@/types/api'
 import type { StreamHandlers } from './sse'
 import { countWords } from '@/lib/format'
@@ -340,17 +341,44 @@ const outlines: Record<number, string> = {
   }),
 }
 
+/** 演示用 v2 结构化记忆（与后端记忆槽契约一致） */
+const MOCK_STRUCTURED_MEMORY = {
+  schema: 'v2',
+  current_state: {
+    location: '雁门关',
+    time: '深秋，北境入冬前',
+    plot_progress: '沈砚袭爵忠武侯，赶赴雁门关赴任，北境战事一触即发。',
+  },
+  characters: [
+    { name: '沈砚', status: '忠武侯，雁门关主将', relationships: '赵铁为其父旧部；林昭立场未明', goals: '查明父亲当年之死，守住雁门关' },
+    { name: '林昭', status: '京中世家子，随军幕僚', relationships: '与沈砚亦敌亦友', goals: '暗中调查家族与北境的联系' },
+  ],
+  foreshadowing: [
+    { description: '玉匣中的功法尚未揭示', planted_chapter: 2, status: 'open', resolved_chapter: 0 },
+    { description: '父亲当年之死的真相', planted_chapter: 1, status: 'open', resolved_chapter: 0 },
+  ],
+  world_facts: ['五境修行体系', '青云门与北境的百年恩怨'],
+  timeline: [
+    { chapter: 1, event: '沈砚袭爵忠武侯' },
+    { chapter: 5, event: '北境狼烟再起，边军集结' },
+  ],
+  unresolved_events: ['林昭的立场选择', '北境大军的动向'],
+  important_items: [
+    { name: '玉匣', status: '尚未打开' },
+    { name: '雁门关兵符', status: '已持有' },
+  ],
+  style_notes: '冷峻克制的文风，多用短句与环境描写',
+}
+
 const memories: Record<number, Memory> = {
   1: {
     id: 1, novel_id: 1,
-    content: JSON.stringify([
-      { key: '主线进度', value: '沈砚已完成复仇，袭爵忠武侯，正赶赴雁门关。' },
-      { key: '伏笔', value: '玉匣中的功法尚未揭示；林昭立场未明。' },
-      { key: '世界观', value: '五境修行体系；青云门与北境的恩怨。' },
-    ], null, 2),
+    content: JSON.stringify(MOCK_STRUCTURED_MEMORY, null, 2),
     updated_at: daysAgo(1),
   },
 }
+
+const consistencyReportsStore: Record<number, ConsistencyReport[]> = {}
 
 // ---------------- 点子 / 聊天 ----------------
 const ideas: Idea[] = [
@@ -694,15 +722,55 @@ export const mockApi = {
   },
   async getMemory(id: number): Promise<Memory> {
     await sleep(150)
-    return memories[Number(id)] ?? { id: 0, novel_id: Number(id), content: '[]', updated_at: now() }
+    return memories[Number(id)] ?? {
+      id: 0,
+      novel_id: Number(id),
+      content: JSON.stringify(MOCK_STRUCTURED_MEMORY),
+      updated_at: now(),
+    }
   },
   async saveMemory(id: number, content: string): Promise<Memory> {
     await sleep(200)
-    const cur = memories[Number(id)] ?? { id: nid(), novel_id: Number(id), content: '[]', updated_at: now() }
+    const cur = memories[Number(id)] ?? { id: nid(), novel_id: Number(id), content: '{}', updated_at: now() }
     cur.content = content
     cur.updated_at = now()
     memories[Number(id)] = cur
     return cur
+  },
+
+  // ---- 一致性审校 ----
+  async consistencyReports(id: number): Promise<ConsistencyReport[]> {
+    await sleep(200)
+    return consistencyReportsStore[Number(id)] ?? []
+  },
+  async runConsistency(id: number): Promise<AiTask> {
+    const t = await mockApi.createTask({ task_type: 'consistency_check', novel_id: id })
+    setTimeout(() => {
+      const arr = consistencyReportsStore[Number(id)] ?? []
+      arr.unshift({
+        id: nid(), novel_id: Number(id), chapter_no: 12, status: 'warning', created_at: now(),
+        report: {
+          status: 'warning',
+          summary: '整体推进基本符合大纲，但存在两处需要关注的伏笔与时间线问题。',
+          issues: [
+            {
+              severity: 'major', type: 'foreshadowing_dropped',
+              description: '第3章埋下的"古戒残魂"伏笔在后续章节中未被提及，原设定的回收节点可能已被错过。',
+              suggestion: '在后续章节安排一次古戒异动或梦境，重新激活该伏笔。',
+              related_chapters: [3],
+            },
+            {
+              severity: 'minor', type: 'timeline_conflict',
+              description: '第6章提到"入门两月"，与第5章的"入门三月"表述不一致。',
+              suggestion: '统一时间表述，建议以"入门三月"为准。',
+              related_chapters: [5, 6],
+            },
+          ],
+        },
+      })
+      consistencyReportsStore[Number(id)] = arr
+    }, 6500)
+    return t
   },
 
   // ---- 点子 ----

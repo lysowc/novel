@@ -19,8 +19,11 @@ const fields: { key: string; label: string; type: 'text' | 'number'; placeholder
   { key: 'ai_temperature', label: 'AI 温度', type: 'number', placeholder: '0.8', hint: '创作随机性，0-2，越高越发散', step: 0.1 },
   { key: 'ai_http_timeout', label: 'AI HTTP 超时（秒）', type: 'number', placeholder: '120', hint: '调用模型接口的超时上限', step: 1 },
   { key: 'context_max_recent_chapters', label: '最近章节数', type: 'number', placeholder: '3', hint: '生成章节时带入的最近章节数量', step: 1 },
-  { key: 'context_summary_max_chars', label: '摘要字符上限', type: 'number', placeholder: '300', hint: '上下文摘要的最大字符数', step: 1 },
+  { key: 'context_summary_max_chars', label: '摘要字符上限', type: 'number', placeholder: '12000', hint: '上下文摘要的最大字符数', step: 1 },
   { key: 'chapter_target_words', label: '章节目标字数', type: 'number', placeholder: '3000', hint: 'AI 生成章节的默认目标字数', step: 1 },
+  { key: 'retrieval_enabled', label: '相关章节检索', type: 'number', placeholder: '1', hint: '生成章节时按相关性召回历史摘要（1=启用，0=关闭）', step: 1 },
+  { key: 'retrieval_max_chapters', label: '召回章节数', type: 'number', placeholder: '5', hint: '每章生成时召回的相关历史章节数量', step: 1 },
+  { key: 'consistency_auto_interval', label: '自动审校间隔（章）', type: 'number', placeholder: '0', hint: '每 N 章自动运行一致性审校（0=关闭）', step: 1 },
 ]
 
 async function load() {

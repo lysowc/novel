@@ -27,12 +27,15 @@ class ContextBuilder
     }
 
     /**
-     * 第二层：小说记忆（全量）
+     * 第二层：小说记忆（全量，v2 结构化渲染 / 旧格式兼容）
      */
     public static function memoryText(Novel $novel): string
     {
         $memory = $novel->memory;
-        return $memory && trim((string)$memory->content) !== '' ? (string)$memory->content : '（暂无小说记忆）';
+        if (!$memory || trim((string)$memory->content) === '') {
+            return '（暂无小说记忆）';
+        }
+        return $memory->toContextText();
     }
 
     /**
@@ -127,16 +130,21 @@ class ContextBuilder
 
     /**
      * 组装章节生成/续写的完整用户上下文
+     * @param array $retrieved 检索召回的相关历史章节（RetrievalService::relatedChapters 的产物）
      */
-    public static function buildChapterContext(Novel $novel, int $chapterNo, string $instruction = ''): string
+    public static function buildChapterContext(Novel $novel, int $chapterNo, string $instruction = '', array $retrieved = []): string
     {
         $sections = [
             '【小说设定】' => self::settingText($novel),
             '【小说记忆（当前状态）】' => self::memoryText($novel),
             '【历史章节摘要】' => self::summariesText($novel),
-            '【最近章节正文】' => self::recentChaptersText($novel),
-            '【本章大纲】' => self::outlineTarget($novel, $chapterNo),
         ];
+        $retrievedText = RetrievalService::render($retrieved);
+        if ($retrievedText !== '') {
+            $sections['【相关历史章节（检索召回）】'] = $retrievedText;
+        }
+        $sections['【最近章节正文】'] = self::recentChaptersText($novel);
+        $sections['【本章大纲】'] = self::outlineTarget($novel, $chapterNo);
         $parts = [];
         foreach ($sections as $label => $content) {
             $parts[] = $label . "\n" . $content;
@@ -145,5 +153,76 @@ class ContextBuilder
             $parts[] = "【用户附加要求】\n" . trim($instruction);
         }
         return implode("\n\n", $parts);
+    }
+
+    /**
+     * 一致性审校用：大纲全文（卷 + 章号 + 标题 + 目标）
+     */
+    public static function outlineText(Novel $novel): string
+    {
+        $outline = $novel->getOutlineArray();
+        $volumes = $outline['volumes'] ?? [];
+        if ($volumes === []) {
+            return '（大纲尚未生成）';
+        }
+        $parts = [];
+        foreach ($volumes as $volume) {
+            $title = (string)($volume['title'] ?? '');
+            $parts[] = "【{$title}】";
+            foreach (($volume['chapters'] ?? []) as $chapter) {
+                $no = (int)($chapter['no'] ?? 0);
+                $ct = (string)($chapter['title'] ?? '');
+                $cs = trim((string)($chapter['summary'] ?? ''));
+                $parts[] = $no > 0
+                    ? "第{$no}章 {$ct}" . ($cs !== '' ? "：{$cs}" : '')
+                    : trim($ct . ($cs !== '' ? "：{$cs}" : ''));
+            }
+        }
+        return implode("\n", $parts);
+    }
+
+    /**
+     * 一致性审校用：已写章节进度（最近 30 章全量 + 更早章节等距抽样，控制在字符上限内）
+     */
+    public static function writtenProgressText(Novel $novel, int $maxChars = 20000): string
+    {
+        $chapters = Chapter::where('novel_id', $novel->id)
+            ->where('status', 'published')
+            ->orderByDesc('chapter_no')
+            ->get(['chapter_no', 'title', 'summary']);
+        if ($chapters->isEmpty()) {
+            return '（还没有已写章节）';
+        }
+
+        $lineFor = function ($chapter): string {
+            return "第{$chapter->chapter_no}章 {$chapter->title}：" . trim((string)$chapter->summary ?: '（无摘要）');
+        };
+
+        // 最近 30 章全量（按章号正序）
+        $lines = [];
+        foreach ($chapters->take(30)->reverse()->values() as $chapter) {
+            $lines[] = $lineFor($chapter);
+        }
+        $used = array_sum(array_map('mb_strlen', $lines));
+
+        // 更早章节在剩余预算内等距抽样
+        $older = $chapters->slice(30);
+        $olderCount = $older->count();
+        $remaining = $maxChars - $used;
+        if ($olderCount > 0 && $remaining > 0) {
+            $perLineEstimate = 160;
+            $budgetCount = max(1, (int)($remaining / $perLineEstimate));
+            $step = max(1, (int)ceil($olderCount / $budgetCount));
+            $sampled = $older->nth($step)->values();
+            foreach ($sampled->reverse()->values() as $chapter) {
+                $line = $lineFor($chapter);
+                if (array_sum(array_map('mb_strlen', $lines)) + mb_strlen($line) > $maxChars) {
+                    $lines[] = '……（更早章节已省略）';
+                    break;
+                }
+                $lines[] = $line;
+            }
+        }
+        return implode("\n", $lines);
     }
 }

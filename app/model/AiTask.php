@@ -28,6 +28,7 @@ class AiTask extends Model
             'regenerate_chapter' => '重新生成',
             'generate_summary' => '生成摘要',
             'update_memory' => '更新记忆',
+            'consistency_check' => '一致性审校',
         ][$type] ?? $type;
     }
 }

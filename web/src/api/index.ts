@@ -2,9 +2,9 @@
 // 真实请求路径与后端契约一一对应，联调时仅需关闭 mock
 import type {
   AiLog, AiModel, AiProvider, AiTask, Category, Chapter, ChapterListItem,
-  ChapterRead, Dashboard, HomeData, Idea, IdeaMessage, LoginResult, Memory,
-  Novel, NovelDetail, NovelSetting, PageResult, Prompt, SystemConfig,
-  TaskType,
+  ChapterRead, ConsistencyReport, Dashboard, HomeData, Idea, IdeaMessage,
+  LoginResult, Memory, Novel, NovelDetail, NovelSetting, PageResult, Prompt,
+  SystemConfig, TaskType,
 } from '@/types/api'
 import { http, withQuery } from './http'
 import { readStream, type StreamHandlers } from './sse'
@@ -174,6 +174,18 @@ export function fetchNovelMemory(id: number | string) {
 export function saveNovelMemory(id: number | string, content: string) {
   if (USE_MOCK) return mockApi.saveMemory(Number(id), content)
   return http.put<Memory>(`/admin/novels/${id}/memory`, { content })
+}
+
+// ============ 一致性审校 ============
+
+export function fetchConsistencyReports(id: number | string) {
+  if (USE_MOCK) return mockApi.consistencyReports(Number(id))
+  return http.get<ConsistencyReport[]>(`/admin/novels/${id}/consistency`)
+}
+
+export function runConsistencyCheck(id: number | string) {
+  if (USE_MOCK) return mockApi.runConsistency(Number(id))
+  return http.post<AiTask>(`/admin/novels/${id}/consistency`)
 }
 
 // ============ 点子 ============

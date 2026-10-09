@@ -11,6 +11,7 @@ import SettingTab from './novel/SettingTab.vue'
 import OutlineTab from './novel/OutlineTab.vue'
 import ChaptersTab from './novel/ChaptersTab.vue'
 import MemoryTab from './novel/MemoryTab.vue'
+import ConsistencyTab from './novel/ConsistencyTab.vue'
 import { fetchAdminNovel } from '@/api'
 import { formatNumber } from '@/lib/format'
 import type { NovelDetail } from '@/types/api'
@@ -29,6 +30,7 @@ const tabItems = [
   { value: 'outline', label: '大纲' },
   { value: 'chapters', label: '章节' },
   { value: 'memory', label: '记忆' },
+  { value: 'consistency', label: '审校' },
 ]
 
 async function reload() {
@@ -76,7 +78,7 @@ onMounted(async () => {
       </div>
 
       <Tabs v-model="active" class="w-full">
-        <TabsList class="grid w-full grid-cols-5 sm:w-auto">
+        <TabsList class="grid w-full grid-cols-6 sm:w-auto">
           <TabsTrigger v-for="t in tabItems" :key="t.value" :value="t.value">
             {{ t.label }}
           </TabsTrigger>
@@ -95,6 +97,9 @@ onMounted(async () => {
         </TabsContent>
         <TabsContent value="memory" class="mt-5">
           <MemoryTab :novel-id="Number(id)" />
+        </TabsContent>
+        <TabsContent value="consistency" class="mt-5">
+          <ConsistencyTab :novel-id="Number(id)" />
         </TabsContent>
       </Tabs>
     </template>

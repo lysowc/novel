@@ -146,12 +146,13 @@ PROMPT,
                 'name' => '章节正文生成',
                 'description' => '按大纲生成指定章节正文',
                 'content' => <<<'PROMPT'
-你是一位资深网文作者，正在创作长篇小说。请根据下面提供的：小说设定、小说记忆（当前状态）、历史章节摘要、最近章节正文、本章大纲，撰写本章正文。
+你是一位资深网文作者，正在创作长篇小说。请根据下面提供的：小说设定、小说记忆（当前状态）、历史章节摘要、相关历史章节（检索召回）、最近章节正文、本章大纲，撰写本章正文。
 
 写作要求：
 - 本章约 {{target_words}} 字
 - 文风为网文风格：节奏明快、对话与描写均衡、爽点安排合理
 - 严格延续已有设定、人物性格与剧情逻辑，绝不与历史章节矛盾
+- 若提供了【相关历史章节（检索召回）】，这些是与本章剧情相关的早期章节，优先参考它们回收伏笔或衔接支线
 - 开头自然衔接最近一章的结尾
 - 结尾要留钩子：推进主线、埋新伏笔或制造悬念
 - 只输出正文内容本身：不要输出章节标题、不要写"第X章"、不要写"本章完"、不要任何解释或注释
@@ -176,28 +177,58 @@ PROMPT,
             [
                 'type' => 'memory_update',
                 'name' => '小说记忆更新',
-                'description' => '旧记忆 + 最新章 → 整理出新记忆（JSON）',
+                'description' => '旧记忆 + 最新章 → 结构化记忆槽（v2）',
                 'content' => <<<'PROMPT'
-你负责维护一部长篇小说的"小说记忆"。小说记忆是 AI 续写时了解"故事当前状态"的权威数据。
+你负责维护一部长篇小说的"结构化小说记忆"。小说记忆是 AI 续写时了解"故事当前状态"的权威数据，采用固定记忆槽结构，保证长篇连载几百章后依然能准确追踪伏笔、人物与世界观。
 
-请根据【旧记忆】和【最新一章】更新记忆：
-- 旧记忆里仍然有效的信息必须保留（合并，而不是重写）
-- 只记录"当前有效状态"：已解决的旧问题可以移除，但要体现剧情推进
-- 新增本章带来的变化：人物状态、地点、时间线、新人物、新物品、新伏笔、未解决问题
-- 内容必须精简、准确，避免冗余描述
+请根据【旧记忆】和【最新一章】把记忆更新为最新状态：
+- 合并而非重写：旧记忆里仍然有效的信息必须保留
+- current_state：当前地点、时间线、主线剧情进展（1~3 句）
+- characters：每个重要人物一条（姓名、当前状态、重要关系、当前目标），只保留近期活跃人物，出场很少的次要人物可删除
+- foreshadowing：每一条伏笔含 description、planted_chapter（约第几章埋下，未知填 0）、status（open 未回收 / resolved 已回收）、resolved_chapter（本章回收了某伏笔时，改为 resolved 并记录本章号）
+- world_facts：本章及旧记忆中新出现、会影响后续剧情的世界观事实（新规则、新地点、新势力等），仍然有效的事实要保留
+- timeline：关键事件时间线，只保留最近 20 条，更早事件的信息合并进 current_state.plot_progress
+- unresolved_events：当前未解决的问题或任务
+- important_items：重要物品及其状态
+- style_notes：文风与写作注意事项（可选）
+- 所有内容精简准确，避免冗余描述，每条信息都要为"未来续写"服务
+
+如果旧记忆是旧版格式（自由 JSON 或键值数组），请把其中有价值的信息迁移到上面的记忆槽中。
 
 严格只输出 JSON（不要输出任何其他文字），结构如下：
 {
-  "current_location": "当前地点",
-  "current_time": "当前时间线",
-  "main_character": {"name": "主角名", "realm": "当前境界/实力", "status": "当前身份与状态"},
-  "main_plot": "当前主线进展（1~2 句）",
-  "unresolved_events": ["未解决的问题或任务"],
-  "foreshadowing": ["已埋下尚未回收的伏笔"],
-  "relationships": ["重要人物关系变化"],
-  "important_items": ["重要物品及其状态"],
-  "side_plots": ["支线进展"]
+  "schema": "v2",
+  "current_state": {"location": "", "time": "", "plot_progress": ""},
+  "characters": [{"name": "", "status": "", "relationships": "", "goals": ""}],
+  "foreshadowing": [{"description": "", "planted_chapter": 0, "status": "open", "resolved_chapter": 0}],
+  "world_facts": [""],
+  "timeline": [{"chapter": 0, "event": ""}],
+  "unresolved_events": [""],
+  "important_items": [{"name": "", "status": ""}],
+  "style_notes": ""
 }
+PROMPT,
+            ],
+            [
+                'type' => 'consistency_check',
+                'name' => '一致性审校',
+                'description' => '对照大纲与已写章节检测漂移、矛盾、伏笔遗忘，产出结构化报告',
+                'content' => <<<'PROMPT'
+你是一位资深网文编辑，负责对一部长篇小说做"一致性审校"。请对照【小说大纲】、【已写章节进度】和【小说记忆】，找出需要作者处理的问题：
+
+1. outline_drift 剧情偏离：写了大纲没有的重要剧情，或跳过了大纲计划的关键节点
+2. contradiction 前后矛盾：人物、设定、时间线、物品状态自相矛盾
+3. foreshadowing_dropped 伏笔遗忘：早期埋下的伏笔长期未回收，且按当前剧情走向已难以自然回收
+4. character_inconsistency 人物失据：性格、能力、目标前后不一致
+5. timeline_conflict 时间线冲突
+6. other 其他问题
+
+要求：
+- 只报告真实存在的问题，不要为了凑数而报告，轻微的风格差异不算问题
+- 每条问题给出 description（具体描述）、suggestion（可执行的修复建议）、related_chapters（相关章号数组）
+- status 分级：ok 没有问题 / warning 存在需要关注的问题 / critical 存在会破坏作品一致性的严重问题
+- 严格只输出 JSON（不要输出任何其他文字或代码块标记）：
+{"status":"ok|warning|critical","summary":"总体评价，1~3 句","issues":[{"severity":"minor|major|critical","type":"outline_drift|contradiction|foreshadowing_dropped|character_inconsistency|timeline_conflict|other","description":"问题描述","suggestion":"修复建议","related_chapters":[章号]}]}
 PROMPT,
             ],
             [
@@ -205,11 +236,12 @@ PROMPT,
                 'name' => 'AI 续写',
                 'description' => '基于全部上下文续写下一章',
                 'content' => <<<'PROMPT'
-你是一位资深网文作者，正在连载一部长篇小说。请根据下面提供的：小说设定、小说记忆（当前状态）、历史章节摘要、最近章节正文、本章大纲，续写下一章。
+你是一位资深网文作者，正在连载一部长篇小说。请根据下面提供的：小说设定、小说记忆（当前状态）、历史章节摘要、相关历史章节（检索召回）、最近章节正文、本章大纲，续写下一章。
 
 写作要求：
 - 本章约 {{target_words}} 字
 - 严格延续已有设定与剧情，开头自然衔接最近一章的结尾
+- 若提供了【相关历史章节（检索召回）】，这些是与本章剧情相关的早期章节，优先参考它们回收伏笔或衔接支线
 - 推进主线或当前支线，制造新的冲突或悬念
 - 结尾留钩子，吸引继续阅读
 - 只输出正文内容本身：不要输出章节标题、不要写"第X章"、不要写"本章完"、不要任何解释
@@ -229,6 +261,35 @@ PROMPT,
             $prompt->updated_at = now();
             $prompt->save();
         }
+
+        // 升级仍是"旧版默认内容"的 Prompt（含指纹才替换，用户自定义修改会被保留）
+        $upgradableTypes = array_column($defaults, 'type');
+        foreach ($upgradableTypes as $type) {
+            $prompt = Prompt::where('type', $type)->first();
+            if (!$prompt) {
+                continue;
+            }
+            $newItem = null;
+            foreach ($defaults as $item) {
+                if ($item['type'] === $type) {
+                    $newItem = $item;
+                    break;
+                }
+            }
+            $isStockOld = match ($type) {
+                'memory_update' => str_contains((string)$prompt->content, '"main_character"') && !str_contains((string)$prompt->content, '"schema"'),
+                'chapter_generate', 'chapter_continue' => str_contains((string)$prompt->content, '历史章节摘要') && !str_contains((string)$prompt->content, '检索召回'),
+                default => false,
+            };
+            if ($isStockOld && $newItem !== null) {
+                $prompt->name = $newItem['name'];
+                $prompt->description = $newItem['description'];
+                $prompt->content = trim($newItem['content']);
+                $prompt->updated_at = now();
+                $prompt->save();
+                $output->writeln("<comment>  已升级 Prompt：{$type}（旧版默认内容 → 新版）</comment>");
+            }
+        }
     }
 
     private function seedConfig(OutputInterface $output): void
@@ -242,6 +303,9 @@ PROMPT,
             'chapter_target_words' => ['3000', '每章目标字数'],
             'outline_volumes' => ['3', '大纲默认卷数'],
             'outline_chapters_per_volume' => ['20', '大纲每卷章数'],
+            'retrieval_enabled' => ['1', '启用相关章节检索（生成时按相关性召回历史摘要，0=关闭）'],
+            'retrieval_max_chapters' => ['5', '每章生成时召回的相关历史章节数量'],
+            'consistency_auto_interval' => ['0', '每 N 章自动运行一致性审校（0=关闭）'],
         ];
         $existing = SystemConfig::allAsMap();
         $toSet = [];

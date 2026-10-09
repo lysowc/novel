@@ -26,6 +26,7 @@ class AiTaskService
         'regenerate_chapter',
         'generate_summary',
         'update_memory',
+        'consistency_check',
     ];
 
     /**
@@ -45,6 +46,18 @@ class AiTaskService
             ->first();
         if ($running) {
             throw new \RuntimeException("该小说已有进行中的任务（{$running->task_type}），请等待完成");
+        }
+        return self::enqueue($type, $novelId, $params);
+    }
+
+    /**
+     * 内部自动入队（章节完成后自动安排审校等场景）：
+     * 不检查同小说进行中任务——调用方保证当前任务即将结束、队列串行消费
+     */
+    public static function enqueue(string $type, int $novelId, array $params = []): AiTask
+    {
+        if (!in_array($type, self::TYPES, true)) {
+            throw new \RuntimeException('未知任务类型: ' . $type);
         }
 
         $task = new AiTask();
@@ -150,6 +163,9 @@ class AiTaskService
                 case 'update_memory':
                     $ai->updateMemory($novel);
                     $onStage('done', '小说记忆更新完成');
+                    break;
+                case 'consistency_check':
+                    $ai->checkConsistency($novel, $task, $onStage);
                     break;
                 default:
                     throw new \RuntimeException('未知任务类型: ' . $task->task_type);

@@ -94,6 +94,10 @@ function detectScenario(string $all): array
     if (str_contains($all, '分卷章节大纲')) {
         return ['outline', mockOutline(), 15];
     }
+    // 一致性审校
+    if (str_contains($all, '一致性审校')) {
+        return ['consistency', mockConsistencyReport(), 12];
+    }
     // 章节摘要
     if (str_contains($all, '章节摘要') && str_contains($all, '本章正文')) {
         return ['summary', mockSummary(), 12];
@@ -173,15 +177,54 @@ function mockSummary(): string
 function mockMemory(): string
 {
     return json_encode([
-        'current_location' => '青云宗外门',
-        'current_time' => '拜入宗门后第三个月',
-        'main_character' => ['name' => '林凡', 'realm' => '炼气九层', 'status' => '青云宗外门弟子'],
-        'main_plot' => '林凡站稳外门，调查试炼妖兽异常，为进入内门做准备。',
-        'unresolved_events' => ['调查妖兽异常的原因', '王涛的报复'],
-        'foreshadowing' => ['古戒中的残魂即将苏醒'],
-        'relationships' => ['与苏瑶初次相遇，互相留意'],
-        'important_items' => ['上古青铜戒', '《青元诀》功法'],
-        'side_plots' => ['老村长的神秘过往'],
+        'schema' => 'v2',
+        'current_state' => [
+            'location' => '青云宗外门',
+            'time' => '拜入宗门后第三个月',
+            'plot_progress' => '林凡站稳外门并成为传功长老记名弟子，正在调查试炼妖兽异常，为进入内门做准备。',
+        ],
+        'characters' => [
+            ['name' => '林凡', 'status' => '炼气九层，传功长老记名弟子', 'relationships' => '与苏瑶初次相遇，互相留意；与王涛结怨', 'goals' => '查清妖兽异常真相，进入内门'],
+            ['name' => '王涛', 'status' => '外门弟子，试炼落败', 'relationships' => '与林凡结怨', 'goals' => '报复林凡'],
+        ],
+        'foreshadowing' => [
+            ['description' => '古戒中的残魂即将苏醒', 'planted_chapter' => 1, 'status' => 'open', 'resolved_chapter' => 0],
+        ],
+        'world_facts' => ['试炼妖兽异常，疑似有人暗中操控'],
+        'timeline' => [
+            ['chapter' => 1, 'event' => '林凡获得上古青铜戒，踏上修行路'],
+            ['chapter' => 2, 'event' => '拜入青云宗，成为外门弟子'],
+        ],
+        'unresolved_events' => ['调查妖兽异常的原因', '王涛可能的报复'],
+        'important_items' => [
+            ['name' => '上古青铜戒', 'status' => '已认主，传承尚未完全开启'],
+            ['name' => '《青元诀》', 'status' => '入门功法，已小成'],
+        ],
+        'style_notes' => '热血爽文风格，节奏明快',
+    ], JSON_UNESCAPED_UNICODE);
+}
+
+function mockConsistencyReport(): string
+{
+    return json_encode([
+        'status' => 'warning',
+        'summary' => '整体推进基本符合大纲，但存在两处需要关注的伏笔与时间线问题。',
+        'issues' => [
+            [
+                'severity' => 'major',
+                'type' => 'foreshadowing_dropped',
+                'description' => '第3章埋下的"古戒残魂"伏笔在后续章节中未被提及，且当前剧情已进入宗门线，原设定的回收节点可能已被错过。',
+                'suggestion' => '在后续章节安排一次古戒异动或梦境，重新激活该伏笔。',
+                'related_chapters' => [3],
+            ],
+            [
+                'severity' => 'minor',
+                'type' => 'timeline_conflict',
+                'description' => '第6章提到"入门两月"，与第5章的"入门三月"时间表述不一致。',
+                'suggestion' => '统一时间表述，建议以"入门三月"为准。',
+                'related_chapters' => [5, 6],
+            ],
+        ],
     ], JSON_UNESCAPED_UNICODE);
 }
 

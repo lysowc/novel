@@ -38,7 +38,7 @@ class AiTaskController
             $params = [];
         }
         // 参数白名单
-        $allowed = ['chapter_no', 'target_words', 'instruction'];
+        $allowed = ['chapter_no', 'target_words', 'instruction', 'remaining'];
         $params = array_intersect_key($params, array_flip($allowed));
 
         try {

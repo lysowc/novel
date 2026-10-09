@@ -24,11 +24,11 @@ return [
             'publicPath' => public_path()
         ]
     ],
-    // AI 任务消费进程
+    // AI 任务消费进程（多进程并行，同一小说仍串行；可用环境变量 AI_WORKER_COUNT 调整）
     'ai_worker' => [
         'handler' => AiWorker::class,
         'listen' => '',
-        'count' => 1,
+        'count' => (int)(getenv('AI_WORKER_COUNT') ?: 3),
         'user' => '',
         'group' => '',
         'reloadable' => true,

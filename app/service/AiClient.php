@@ -60,12 +60,13 @@ class AiClient
     /**
      * 记录 AI 调用日志
      */
-    public static function log(string $taskType, AiProvider $provider, AiModel $model, array $usage, int $durationMs, string $status, string $error = ''): void
+    public static function log(string $taskType, AiProvider $provider, AiModel $model, array $usage, int $durationMs, string $status, string $error = '', string $prompt = ''): void
     {
         $log = new AiLog();
         $log->provider = $provider->name;
         $log->model = $model->name;
         $log->task_type = $taskType;
+        $log->prompt = $prompt;
         $log->prompt_tokens = (int)($usage['prompt_tokens'] ?? 0);
         $log->completion_tokens = (int)($usage['completion_tokens'] ?? 0);
         $log->total_tokens = (int)($usage['total_tokens'] ?? 0);
@@ -74,6 +75,19 @@ class AiClient
         $log->error_message = mb_substr($error, 0, 900);
         $log->created_at = now();
         $log->save();
+    }
+
+    /**
+     * 提取 system prompt（用于日志记录实际使用的提示词）
+     */
+    private static function systemPrompt(array $messages): string
+    {
+        foreach ($messages as $message) {
+            if (($message['role'] ?? '') === 'system') {
+                return (string)($message['content'] ?? '');
+            }
+        }
+        return '';
     }
 
     /**
@@ -93,6 +107,7 @@ class AiClient
         ['provider' => $provider, 'model' => $model] = $target;
 
         $taskType = (string)($options['task_type'] ?? 'chat');
+        $prompt = self::systemPrompt($messages);
         $temperature = (float)($options['temperature'] ?? $model->temperature ?? SystemConfig::get('ai_temperature', 0.8));
         $timeout = (int)($options['timeout'] ?? SystemConfig::get('ai_http_timeout', 120));
 
@@ -119,7 +134,7 @@ class AiClient
                 'headers' => self::headers($provider),
             ]);
         } catch (\Throwable $e) {
-            self::log($taskType, $provider, $model, [], (int)((microtime(true) - $start) * 1000), 'failed', $e->getMessage());
+            self::log($taskType, $provider, $model, [], (int)((microtime(true) - $start) * 1000), 'failed', $e->getMessage(), $prompt);
             throw new \RuntimeException('AI 请求失败: ' . $e->getMessage());
         }
         $duration = (int)((microtime(true) - $start) * 1000);
@@ -127,13 +142,13 @@ class AiClient
 
         if ($resp->getStatusCode() !== 200 || !is_array($body) || !isset($body['choices'][0]['message']['content'])) {
             $err = is_array($body) ? ($body['error']['message'] ?? ('HTTP ' . $resp->getStatusCode())) : ('HTTP ' . $resp->getStatusCode());
-            self::log($taskType, $provider, $model, [], $duration, 'failed', (string)$err);
+            self::log($taskType, $provider, $model, [], $duration, 'failed', (string)$err, $prompt);
             throw new \RuntimeException('AI 调用失败: ' . $err);
         }
 
         $text = (string)$body['choices'][0]['message']['content'];
         $usage = is_array($body['usage'] ?? null) ? $body['usage'] : [];
-        self::log($taskType, $provider, $model, $usage, $duration, 'success');
+        self::log($taskType, $provider, $model, $usage, $duration, 'success', '', $prompt);
         return [
             'text' => $text,
             'usage' => $usage,
@@ -158,6 +173,7 @@ class AiClient
         ['provider' => $provider, 'model' => $model] = $target;
 
         $taskType = (string)($options['task_type'] ?? 'chat');
+        $prompt = self::systemPrompt($messages);
         $temperature = (float)($options['temperature'] ?? $model->temperature ?? SystemConfig::get('ai_temperature', 0.8));
         $timeout = (int)($options['timeout'] ?? SystemConfig::get('ai_http_timeout', 120));
 
@@ -196,7 +212,7 @@ class AiClient
                 }
             } catch (\Throwable) {
             }
-            self::log($taskType, $provider, $model, [], $duration, 'failed', $err);
+            self::log($taskType, $provider, $model, [], $duration, 'failed', $err, $prompt);
             throw new \RuntimeException('AI 调用失败: ' . $err);
         }
 
@@ -265,11 +281,11 @@ class AiClient
         $onStage && $onStage('stream_end');
 
         if ($text === '' && $readError !== null) {
-            self::log($taskType, $provider, $model, $usage, $duration, 'failed', '流式读取中断: ' . $readError);
+            self::log($taskType, $provider, $model, $usage, $duration, 'failed', '流式读取中断: ' . $readError, $prompt);
             throw new \RuntimeException('AI 流式输出中断: ' . $readError);
         }
 
-        self::log($taskType, $provider, $model, $usage, $duration, 'success');
+        self::log($taskType, $provider, $model, $usage, $duration, 'success', '', $prompt);
         return [
             'text' => $text,
             'usage' => $usage,

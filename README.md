@@ -74,6 +74,14 @@ php -S 127.0.0.1:8899 test/mock_ai_server.php
 # 后台添加 Provider: base_url = http://127.0.0.1:8899
 ```
 
+## 连续创作与运维
+
+- **连续续写**：章节页「连续续写 N 章」逐章排队生成；中途某章失败会**跳过继续**下一章，坏章可用「AI 重新生成」或任务重试补救。
+- **多进程消费**：`ai_worker` 默认 3 个进程并行（同一本小说仍串行、不同小说并行）；可用环境变量 `AI_WORKER_COUNT` 调整，例如 `AI_WORKER_COUNT=5 php start.php start`。
+- **卡死自恢复**：worker 启动时会自动把残留的 `running` 任务标记为失败（可重试），不再阻塞后续任务。
+- **AI 日志记录 Prompt**：每次调用会把实际使用的 system prompt 写入日志（迁移 `0003`），后台「AI 日志」可逐条查看。
+- 前端源码与本项目 `web/` 一致；`python/novel-python` 仓库为同契约的 Python 后端，可无缝切换。
+
 ## 目录结构
 
 ```
@@ -94,7 +102,8 @@ test/mock_ai_server.php 本地 mock AI（联调用）
 ## 常用命令
 
 ```bash
-php start.php start|stop|restart|status   # 服务管理
+php start.php start|stop|restart|status   # 服务管理（含 3 个 AI worker 进程）
+AI_WORKER_COUNT=5 php start.php start     # 自定义 worker 进程数
 php webman migrate [fresh]                # 迁移（fresh 清库重建）
 php webman app:install                    # 初始化数据
 ```

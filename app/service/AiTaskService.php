@@ -184,6 +184,40 @@ class AiTaskService
             $task->save();
             self::finish($taskId, 'failed', $message);
         }
+
+        // 连续续写：无论成功失败都续链下一章（跳过失败章，坏章可重试/重新生成）
+        try {
+            self::continueChain($task);
+        } catch (\Throwable) {
+        }
+    }
+
+    /**
+     * 连续续写续链：remaining > 0 时入队下一章
+     */
+    private static function continueChain(AiTask $task): void
+    {
+        if ($task->task_type !== 'continue_chapter') {
+            return;
+        }
+        $params = is_array($task->params) ? $task->params : [];
+        $remaining = (int)($params['remaining'] ?? 0);
+        if ($remaining <= 0) {
+            return;
+        }
+        $nextParams = ['remaining' => $remaining - 1];
+        if (!empty($params['target_words'])) {
+            $nextParams['target_words'] = (int)$params['target_words'];
+        }
+        if (!empty($params['instruction'])) {
+            $nextParams['instruction'] = (string)$params['instruction'];
+        }
+        self::enqueue('continue_chapter', $task->ref_id, $nextParams);
+        self::publish($task->id, [
+            'type' => 'status',
+            'stage' => 'auto_continue',
+            'message' => '本任务结束，已自动安排下一章（剩余 ' . ($remaining - 1) . ' 章）',
+        ]);
     }
 
     /**

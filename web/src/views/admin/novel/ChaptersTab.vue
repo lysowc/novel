@@ -170,7 +170,10 @@ function openProgressIfRunning(): boolean {
 
 function startAi(type: 'generate_chapter' | 'continue_chapter' | 'regenerate_chapter' | 'generate_summary', c?: Chapter) {
   if (openProgressIfRunning()) return
-  const no = c?.chapter_no ?? latestNo.value
+  // generate_chapter 表示"生成下一章"，章号 = 当前最大章号 + 1
+  const no = type === 'generate_chapter' && !c
+    ? latestNo.value + 1
+    : (c?.chapter_no ?? latestNo.value)
   if ((type === 'continue_chapter' || type === 'regenerate_chapter' || type === 'generate_summary') && !no) {
     toast.error('还没有章节，请先创建或生成第一章')
     return

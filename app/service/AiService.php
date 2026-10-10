@@ -133,18 +133,22 @@ class AiService
         $params = $task->params ?? [];
         $type = $task->task_type;
 
-        if ($type === 'generate_chapter' || $type === 'regenerate_chapter') {
+        if ($type === 'regenerate_chapter') {
             $chapterNo = (int)($params['chapter_no'] ?? 0);
             if ($chapterNo <= 0) {
                 throw new \RuntimeException('缺少 chapter_no 参数');
             }
             // 重写时确认章节存在（生成成功后才覆盖）
             $exists = Chapter::where('novel_id', $novel->id)->where('chapter_no', $chapterNo)->exists();
-            if ($type === 'regenerate_chapter' && !$exists) {
+            if (!$exists) {
                 throw new \RuntimeException("第{$chapterNo}章不存在");
             }
         } else {
-            $chapterNo = (int)Chapter::where('novel_id', $novel->id)->max('chapter_no') + 1;
+            // generate_chapter / continue_chapter：未指定章号时默认生成下一章
+            $chapterNo = (int)($params['chapter_no'] ?? 0);
+            if ($chapterNo <= 0) {
+                $chapterNo = (int)Chapter::where('novel_id', $novel->id)->max('chapter_no') + 1;
+            }
         }
 
         $targetWords = (int)($params['target_words'] ?? SystemConfig::get('chapter_target_words', 3000));
